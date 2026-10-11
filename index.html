@@ -220,7 +220,7 @@ function main(){
       let out = `<div class="sub" style="margin-bottom:10px">As of ${geo.date}</div>`;
       out += geo.groups.map(g=>{
         const regMap = Object.keys(REGISTERED).length ? regByField(g.field) : null;
-        let rows = g.rows.map(r=>{
+        let rows = g.rows.slice().sort((a,b)=>Number(a.key)-Number(b.key)).map(r=>{
           const reg = regMap ? (regMap[r.key]||0) : 0;
           const pct = regMap && reg ? (r.count/reg*100).toFixed(2)+'%' : '—';
           return `<tr><td>${r.name}</td><td>${(r.count||0).toLocaleString()}</td><td>${pct}</td></tr>`;
