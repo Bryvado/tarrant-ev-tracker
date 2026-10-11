@@ -263,10 +263,10 @@ function regColor(count){
 function renderMap(){
   const tools = document.getElementById('mapTools');
   const modes = [
-    ["commish","Commissioner precinct"],
-    ["registered","Registered voters"],
-    ["turnout","Turnout vs. registered"],
-    ["partisan","Partisan lean"],
+    ["turnout","Turnout vs. Registered"],
+    ["commish","Commissioner Precinct"],
+    ["registered","Registered Voters"],
+    ["partisan","Partisan Lean"],
   ];
   tools.innerHTML = modes.map(m=>`<button class="mapbtn${m[0]===mapMode?' active':''}" data-mode="${m[0]}">${m[1]}</button>`).join('');
   tools.querySelectorAll('button').forEach(b=> b.onclick = ()=>{ mapMode=b.dataset.mode; renderMap(); });
