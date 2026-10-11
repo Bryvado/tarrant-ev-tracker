@@ -130,12 +130,15 @@ const DATA2022 = [
 ];
 
 // Latest geographic/roster breakdown, when Claude has processed an uploaded roster file.
+// Candidates on the Nov 3, 2026 ballot, from the county's certified candidate list. Keyed by group field, then district.
+const CANDIDATES = {"cong": {"6": "Jake Ellzey (R) · Danny Minton (D)", "12": "Craig Goldman (R) · Angela 'Heli' Rodriguez Prilliman (D)", "24": "Beth Van Duyne (R) · Kevin Burge (D)", "25": "Roger Williams (R) · Dione Sims (D)", "30": "Everett Jackson (R) · Frederick D. Haynes III (D)"}, "sen": {"9": "Leigh Wambsganss (R) · Taylor Rehmet (D)", "22": "David Cook (R) · Amy Martinez-Salas (D) — also a special election for the unexpired term"}, "hse": {"90": "Ramon Romero, Jr (D)", "91": "David Lowe (R) · Yisak Worku (D)", "92": "JP Woodruff (R) · Salman Bhojani (D)", "93": "Alan Blaylock (R) · Ericka Lomick (D) — also a special election for the unexpired term", "94": "Cheryl Bean (R) · Katie O'Brien Duzan (D)", "95": "Nicole Collier (D)", "96": "Ellen Fleischmann (R) · Ebony M. Turner (D)", "97": "John W. McQueeney (R) · Beth Llewellyn McLaughlin (D)", "98": "Armin Mizani (R) · Cate Brennan (D)", "99": "Charlie Geren (R) · Michelle Winder (D)", "101": "Junior Ezeonu (D)"}, "com": {"2": "Tony Tinderholt (R) · Jared Williams (D)", "4": "Manny Ramirez (R) · Nydia Cardenas (D)"}};
 // GEO: { date, groups:[{title, field, rows:[{key, name, count}, ...]}, ...] }
 // field = the matching key in PRECINCTS (com/sen/hse), used to compute registered-voter % live.
 const GEO = { date:"TEST: Nov 2025 Day 1", groups:[
   {title:"By commissioner precinct", field:"com", rows:[{"key": "3", "name": "Commissioner Pct 3", "count": 2454}, {"key": "4", "name": "Commissioner Pct 4", "count": 1440}, {"key": "2", "name": "Commissioner Pct 2", "count": 928}, {"key": "1", "name": "Commissioner Pct 1", "count": 727}]},
   {title:"By state senate district", field:"sen", rows:[{"key": "9", "name": "Senate District 9", "count": 3522}, {"key": "10", "name": "Senate District 10", "count": 1074}, {"key": "22", "name": "Senate District 22", "count": 534}, {"key": "12", "name": "Senate District 12", "count": 417}, {"key": "23", "name": "Senate District 23", "count": 2}]},
   {title:"By state house district", field:"hse", rows:[{"key": "98", "name": "House District 98", "count": 1082}, {"key": "91", "name": "House District 91", "count": 699}, {"key": "94", "name": "House District 94", "count": 680}, {"key": "93", "name": "House District 93", "count": 648}, {"key": "99", "name": "House District 99", "count": 639}, {"key": "96", "name": "House District 96", "count": 497}, {"key": "95", "name": "House District 95", "count": 407}, {"key": "97", "name": "House District 97", "count": 303}, {"key": "90", "name": "House District 90", "count": 230}, {"key": "92", "name": "House District 92", "count": 216}, {"key": "101", "name": "House District 101", "count": 148}]},
+  {title:"By congressional district", field:"cong", rows:[{"key": "6", "name": "Congressional District 6", "count": 634}, {"key": "12", "name": "Congressional District 12", "count": 1374}, {"key": "24", "name": "Congressional District 24", "count": 2592}, {"key": "25", "name": "Congressional District 25", "count": 785}, {"key": "30", "name": "Congressional District 30", "count": 164}]},
 ]};
 
 // Registered voters by precinct, current cycle. Fill in as: {2004: 1850, ...}. Empty until the
@@ -217,15 +220,17 @@ function main(){
     if(!geo || !geo.groups || !geo.groups.length){
       gt.innerHTML = '<div class="empty">No precinct/district breakdown yet — this fills in once a daily voter roster is uploaded.</div>';
     } else {
-      let out = `<div class="sub" style="margin-bottom:10px">As of ${geo.date}</div>`;
+      let out = `<div class="sub" style="margin-bottom:10px">As of ${geo.date}. Candidate lists are for information only; see your official sample ballot.</div>`;
       out += geo.groups.map(g=>{
         const regMap = Object.keys(REGISTERED).length ? regByField(g.field) : null;
         let rows = g.rows.slice().sort((a,b)=>Number(a.key)-Number(b.key)).map(r=>{
           const reg = regMap ? (regMap[r.key]||0) : 0;
           const pct = regMap && reg ? (r.count/reg*100).toFixed(2)+'%' : '—';
-          return `<tr><td>${r.name}</td><td>${(r.count||0).toLocaleString()}</td><td>${pct}</td></tr>`;
+          const cm = CANDIDATES[g.field];
+          const cd = cm ? (cm[r.key] || 'No race this year') : '';
+          return `<tr><td>${r.name}</td><td>${(r.count||0).toLocaleString()}</td><td>${pct}</td>${cm ? `<td style="text-align:left;min-width:260px">${cd}</td>` : ''}</tr>`;
         }).join('');
-        return `<div style="font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.82rem; font-weight:600; margin:14px 0 4px">${g.title}</div><table><tr><th>Area</th><th>Voters</th><th>% of registered</th></tr>${rows}</table>`;
+        return `<div style="font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.82rem; font-weight:600; margin:14px 0 4px">${g.title}</div><table><tr><th>Area</th><th>Voters</th><th>% of registered</th>${CANDIDATES[g.field] ? '<th style="text-align:left">Candidates on the ballot</th>' : ''}</tr>${rows}</table>`;
       }).join('');
       gt.innerHTML = out;
     }
