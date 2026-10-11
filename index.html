@@ -301,6 +301,8 @@ function renderMap(){
 
   let paths = PRECINCTS.map(pr=>{
     let fill = "#C9C4B6", info = "";
+    const regT = REGISTERED[pr.p], vtT = TURNOUT_BY_PRECINCT[pr.p];
+    const turnStr = (regT && vtT!==undefined) ? `${vtT.toLocaleString()} of ${regT.toLocaleString()} registered (${(vtT/regT*100).toFixed(1)}%)` : "No turnout data yet";
     if(mapMode==="commish"){
       fill = COM_COLORS[pr.com] || "#C9C4B6";
       info = `Commissioner Pct ${pr.com}`;
@@ -326,7 +328,7 @@ function renderMap(){
         info = `${side}+${margin.toFixed(1)} (R ${(p*100).toFixed(1)}% / D ${((1-p)*100).toFixed(1)}%)`;
       } else info = "No partisan history for this precinct (new for 2026)";
     }
-    return `<path class="mappath" d="${pr.d}" fill="${fill}" data-p="${pr.p}" data-info="${info.replace(/"/g,'&quot;')}" data-sen="${pr.sen}" data-hse="${pr.hse}" data-cong="${pr.cong}" data-com="${pr.com}"></path>`;
+    return `<path class="mappath" d="${pr.d}" fill="${fill}" data-p="${pr.p}" data-info="${info.replace(/"/g,'&quot;')}" data-turn="${turnStr}" data-sen="${pr.sen}" data-hse="${pr.hse}" data-cong="${pr.cong}" data-com="${pr.com}"></path>`;
   }).join('');
   svg.innerHTML = paths;
 
@@ -336,7 +338,7 @@ function renderMap(){
       tip.style.left = (e.clientX - r.left + 12) + 'px';
       tip.style.top = (e.clientY - r.top + 12) + 'px';
       tip.style.opacity = 1;
-      tip.innerHTML = `<b>Precinct ${el.dataset.p}</b>${el.dataset.info}<br>Senate ${el.dataset.sen} · House ${el.dataset.hse} · Congress ${el.dataset.cong} · Commish ${el.dataset.com}`;
+      tip.innerHTML = `<b>Precinct ${el.dataset.p}</b>${el.dataset.info}${mapMode==="turnout" ? "" : "<br>Turnout: " + el.dataset.turn}<br>Senate ${el.dataset.sen} · House ${el.dataset.hse} · Congress ${el.dataset.cong} · Commish ${el.dataset.com}`;
     });
     el.addEventListener('mouseleave', ()=>{ tip.style.opacity = 0; });
   });
