@@ -236,6 +236,20 @@ function main(){
 }
 
 const COM_COLORS = {"1":"#F0AC42","2":"#504846","3":"#C98A2E","4":"#8C8279"};
+
+// District maps: one color per district, assigned in numeric order from this palette.
+const DIST_PALETTE = ["#F0AC42","#504846","#7A8F6B","#8A6FA0","#5E7480","#D8C39A","#9A9A4A","#C98A2E","#6E9A96","#A89A8C","#3F5E4A","#7B5B6E"];
+const DIST_MODES = {
+  sen: {field:"sen", label:"Senate District", short:"SD"},
+  hse: {field:"hse", label:"House District", short:"HD"},
+  cong: {field:"cong", label:"Congressional District", short:"CD"},
+};
+function distColors(field){
+  const vals = [...new Set(PRECINCTS.map(p=>p[field]))].sort((a,b)=>a-b);
+  const m = {};
+  vals.forEach((v,i)=>{ m[v] = DIST_PALETTE[i % DIST_PALETTE.length]; });
+  return m;
+}
 let mapMode = "turnout";
 
 function regByField(field){
@@ -264,9 +278,12 @@ function renderMap(){
   const tools = document.getElementById('mapTools');
   const modes = [
     ["turnout","Turnout vs. Registered"],
-    ["commish","Commissioner Precinct"],
     ["registered","Registered Voters"],
     ["partisan","Partisan Lean"],
+    ["commish","Commissioner Precinct"],
+    ["sen","Senate District"],
+    ["hse","House District"],
+    ["cong","Congressional District"],
   ];
   tools.innerHTML = modes.map(m=>`<button class="mapbtn${m[0]===mapMode?' active':''}" data-mode="${m[0]}">${m[1]}</button>`).join('');
   tools.querySelectorAll('button').forEach(b=> b.onclick = ()=>{ mapMode=b.dataset.mode; renderMap(); });
@@ -279,11 +296,17 @@ function renderMap(){
   let haveTurnoutData = Object.keys(REGISTERED).length && Object.keys(TURNOUT_BY_PRECINCT).length;
   let havePartisanData = Object.keys(PARTISAN).length;
 
+  const dm = DIST_MODES[mapMode];
+  const dcol = dm ? distColors(dm.field) : null;
+
   let paths = PRECINCTS.map(pr=>{
     let fill = "#C9C4B6", info = "";
     if(mapMode==="commish"){
       fill = COM_COLORS[pr.com] || "#C9C4B6";
       info = `Commissioner Pct ${pr.com}`;
+    } else if(dm){
+      fill = dcol[pr[dm.field]] || "#C9C4B6";
+      info = `${dm.label} ${pr[dm.field]}`;
     } else if(mapMode==="registered"){
       const reg = REGISTERED[pr.p];
       if(reg!==undefined){ fill = regColor(reg); info = `${reg.toLocaleString()} registered voters`; }
@@ -303,7 +326,7 @@ function renderMap(){
         info = `${side}+${margin.toFixed(1)} (R ${(p*100).toFixed(1)}% / D ${((1-p)*100).toFixed(1)}%)`;
       } else info = "No partisan history for this precinct (new for 2026)";
     }
-    return `<path class="mappath" d="${pr.d}" fill="${fill}" data-p="${pr.p}" data-info="${info.replace(/"/g,'&quot;')}" data-sen="${pr.sen}" data-hse="${pr.hse}" data-com="${pr.com}"></path>`;
+    return `<path class="mappath" d="${pr.d}" fill="${fill}" data-p="${pr.p}" data-info="${info.replace(/"/g,'&quot;')}" data-sen="${pr.sen}" data-hse="${pr.hse}" data-cong="${pr.cong}" data-com="${pr.com}"></path>`;
   }).join('');
   svg.innerHTML = paths;
 
@@ -313,7 +336,7 @@ function renderMap(){
       tip.style.left = (e.clientX - r.left + 12) + 'px';
       tip.style.top = (e.clientY - r.top + 12) + 'px';
       tip.style.opacity = 1;
-      tip.innerHTML = `<b>Precinct ${el.dataset.p}</b>${el.dataset.info}<br>Senate ${el.dataset.sen} · House ${el.dataset.hse} · Commish ${el.dataset.com}`;
+      tip.innerHTML = `<b>Precinct ${el.dataset.p}</b>${el.dataset.info}<br>Senate ${el.dataset.sen} · House ${el.dataset.hse} · Congress ${el.dataset.cong} · Commish ${el.dataset.com}`;
     });
     el.addEventListener('mouseleave', ()=>{ tip.style.opacity = 0; });
   });
@@ -321,11 +344,15 @@ function renderMap(){
   if(mapMode==="commish"){
     legend.innerHTML = Object.entries(COM_COLORS).map(([k,c])=>`<span style="display:flex;align-items:center;gap:4px;margin-right:10px"><i class="sw" style="background:${c}"></i>Pct ${k}</span>`).join('');
     note.textContent = "707 voting precincts, colored by county commissioner precinct.";
+  } else if(dm){
+    legend.innerHTML = Object.entries(dcol).map(([k,c])=>`<span style="display:flex;align-items:center;gap:4px;margin-right:10px"><i class="sw" style="background:${c}"></i>${dm.short} ${k}</span>`).join('');
+    legend.style.flexWrap = "wrap";
+    note.textContent = `Precincts colored by ${dm.label.toLowerCase()}, showing the parts of each district inside Tarrant County.`;
   } else if(mapMode==="registered"){
     legend.innerHTML = `<span style="margin-right:6px">Fewer</span><i class="sw" style="background:rgb(245,238,222)"></i><i class="sw" style="background:rgb(163,155,146)"></i><i class="sw" style="background:rgb(80,72,70)"></i><span style="margin-left:6px">More registered voters</span>`;
-    note.textContent = "Registered voters per precinct, as of the user's latest snapshot — will be refreshed closer to Oct 19.";
+    note.textContent = "Registered voters per precinct, from the latest snapshot. Will be refreshed before early voting begins.";
   } else if(mapMode==="turnout"){
-    legend.innerHTML = haveTurnoutData ? `<i class="sw" style="background:rgb(31,90,79)"></i><span style="margin-right:8px">Lower turnout</span><i class="sw" style="background:rgb(31,180,79)"></i><span>Higher turnout</span>` : '';
+    legend.innerHTML = haveTurnoutData ? `<i class="sw" style="background:rgb(247,240,230)"></i><span style="margin-right:8px">Lower turnout</span><i class="sw" style="background:rgb(240,172,66)"></i><span>Higher turnout</span>` : '';
     note.textContent = haveTurnoutData ? "Cumulative EV turnout as a share of registered voters, by precinct." : "Waiting on registered-voter counts and a processed roster upload to populate this view.";
   } else {
     legend.innerHTML = havePartisanData ? `<span style="margin-right:6px">D+50</span><i class="sw" style="background:#1F5C6F"></i><i class="sw" style="background:#8E8F8B"></i><i class="sw" style="background:#C9C4B6"></i><i class="sw" style="background:#A9705B"></i><i class="sw" style="background:#8A1538"></i><span style="margin-left:6px;margin-right:10px">R+50</span><i class="sw" style="background:#C9C4B6;border:1px dashed var(--muted)"></i><span>No history</span>` : '';
