@@ -53,6 +53,13 @@ footer{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.75rem; c
 .mappath:hover{opacity:.8; stroke:var(--ink); stroke-width:1.8;}
 .tooltip{position:absolute; pointer-events:none; background:var(--ink); color:var(--paper); font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.78rem; padding:8px 10px; max-width:220px; opacity:0; transition:opacity .1s; z-index:5; line-height:1.4;}
 .tooltip b{display:block; font-size:.85rem; margin-bottom:2px;}
+.tiltnote{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.9rem; line-height:1.5; margin:-14px 0 28px; padding:12px 14px; border-left:3px solid var(--accent); background:var(--card);}
+.tiltnote small{display:block; color:var(--muted); font-size:.76rem; margin-top:4px;}
+.tier{display:grid; grid-template-columns:150px 1fr; gap:10px; align-items:center; font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.82rem; margin-bottom:8px;}
+.tierbar{height:18px; background:var(--accent); min-width:2px;}
+.tiertxt{display:flex; align-items:center; gap:8px;}
+.tiertxt span{color:var(--muted); font-size:.74rem; white-space:nowrap;}
+@media (max-width:560px){.tier{grid-template-columns:1fr;}}
 .mappath.dim{pointer-events:none; cursor:default;}
 #mapSvg{user-select:none; -webkit-user-select:none;}
 .pollmark{cursor:pointer;}
@@ -76,6 +83,7 @@ footer{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.75rem; c
   </header>
 
   <div class="stats" id="stats"></div>
+  <div class="tiltnote" id="tiltNote" style="display:none"></div>
 
   <section>
     <h2>Cumulative turnout</h2>
@@ -85,6 +93,11 @@ footer{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.75rem; c
       <span><i class="dot" style="background:var(--accent2)"></i>In-person cumulative</span>
       <span><i class="dot" style="background:#6B6558; opacity:.7"></i>2022 comparison (in-person, dashed)</span>
     </div>
+  </section>
+
+  <section>
+    <h2>Turnout by partisan lean of precinct</h2>
+    <div id="tierChart"></div>
   </section>
 
   <section>
@@ -183,6 +196,7 @@ function main(){
         [(last.inperson_daily||0).toLocaleString(), 'In-person, ' + last.date],
       ];
       if(totalReg){ cells.push([(totalCum/totalReg*100).toFixed(2)+'%', 'Turnout (of '+totalReg.toLocaleString()+' registered)']); }
+      if(Object.keys(TURNOUT_BY_PRECINCT).length){ const ls = leanStats(()=>true); if(ls.early!==null){ cells.push([leanTxt(ls.early), 'Early-vote lean (county baseline '+leanTxt(ls.base)+')']); cells.push([tiltTxt(ls), 'Early-vote tilt vs. baseline']); } }
       const base22 = DATA2022.find(d=>d.day===last.day);
       if(base22){
         const pct = ((last.inperson_cumulative/base22.inperson_cumulative)-1)*100;
@@ -229,7 +243,7 @@ function main(){
     if(!geo || !geo.groups || !geo.groups.length){
       gt.innerHTML = '<div class="empty">No precinct/district breakdown yet — this fills in once a daily voter roster is uploaded.</div>';
     } else {
-      let out = `<div class="sub" style="margin-bottom:10px">As of ${geo.date}. Candidate lists are for information only; see your official sample ballot.</div>`;
+      let out = `<div class="sub" style="margin-bottom:10px">As of ${geo.date}. Candidate lists are for information only; see your official sample ballot.</div><div class="sub" style="margin-bottom:10px">Baseline lean is each district's registered-voter-weighted precinct partisan history; early-vote lean weights the same history by early votes cast; tilt is the difference, in points of margin. It reflects where voters live, not how they vote. "n<100" means fewer than 100 early votes so far, too few to read.</div>`;
       out += geo.groups.map(g=>{
         const regMap = Object.keys(REGISTERED).length ? regByField(g.field) : null;
         let rows = g.rows.slice().sort((a,b)=>Number(a.key)-Number(b.key)).map(r=>{
@@ -237,9 +251,10 @@ function main(){
           const pct = regMap && reg ? (r.count/reg*100).toFixed(2)+'%' : '—';
           const cm = CANDIDATES[g.field];
           const cd = cm ? (cm[r.key] || 'No race this year') : '';
-          return `<tr><td>${r.name}</td><td>${(r.count||0).toLocaleString()}</td><td>${pct}</td>${cm ? `<td style="text-align:left;min-width:260px">${cd}</td>` : ''}</tr>`;
+          const ls = leanStats(pr=>pr[g.field]===r.key);
+          return `<tr><td>${r.name}</td><td>${(r.count||0).toLocaleString()}</td><td>${pct}</td><td>${leanTxt(ls.base)}</td><td>${ls.votes>=MIN_LEAN_VOTES ? leanTxt(ls.early) : 'n<100'}</td><td>${ls.votes>=MIN_LEAN_VOTES ? tiltTxt(ls) : 'n<100'}</td>${cm ? `<td style="text-align:left;min-width:260px">${cd}</td>` : ''}</tr>`;
         }).join('');
-        return `<div style="font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.82rem; font-weight:600; margin:14px 0 4px">${g.title}</div><table><tr><th>Area</th><th>Voters</th><th>% of registered</th>${CANDIDATES[g.field] ? '<th style="text-align:left">Candidates on the ballot</th>' : ''}</tr>${rows}</table>`;
+        return `<div style="font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.82rem; font-weight:600; margin:14px 0 4px">${g.title}</div><table><tr><th>Area</th><th>Voters</th><th>% of registered</th><th>Baseline lean</th><th>Early-vote lean</th><th>Tilt</th>${CANDIDATES[g.field] ? '<th style="text-align:left">Candidates on the ballot</th>' : ''}</tr>${rows}</table>`;
       }).join('');
       gt.innerHTML = out;
     }
@@ -248,6 +263,7 @@ function main(){
   render(DATA2026, GEO);
   renderMap();
   initMapControls();
+  renderTilt();
 }
 
 const COM_COLORS = {"1":"#F0AC42","2":"#504846","3":"#C98A2E","4":"#8C8279"};
@@ -266,6 +282,64 @@ function distColors(field){
   return m;
 }
 let mapMode = "turnout";
+
+// ---- Partisan lean roll-ups ------------------------------------------------------------
+// PARTISAN[p] is the Republican two-party share (0-1) of precinct p's historical top-of-ballot vote.
+// Baseline lean = registered-voter-weighted average; early-vote lean = same, weighted by early votes.
+// Tilt = early-vote lean minus baseline, in points of margin. It describes where voters live, not how they vote.
+const MIN_LEAN_VOTES = 100; // below this, early-vote lean and tilt are too noisy to show
+function leanStats(filter){
+  let reg=0, regL=0, v=0, vL=0;
+  PRECINCTS.forEach(pr=>{
+    if(!filter(pr)) return;
+    const l = PARTISAN[pr.p], r = REGISTERED[pr.p];
+    if(l===undefined || !r) return;
+    reg += r; regL += r*l;
+    const t = TURNOUT_BY_PRECINCT[pr.p] || 0; v += t; vL += t*l;
+  });
+  return {reg, votes:v, base: reg ? regL/reg : null, early: v ? vL/v : null};
+}
+function leanTxt(share){
+  if(share===null || share===undefined) return '\u2014';
+  const m = (2*share-1)*100;
+  return (m>=0 ? 'R+' : 'D+') + Math.abs(m).toFixed(1);
+}
+function tiltVal(ls){ return (ls.base===null || ls.early===null) ? null : ((2*ls.early-1) - (2*ls.base-1))*100; }
+function tiltTxt(ls){
+  const d = tiltVal(ls);
+  if(d===null) return '\u2014';
+  if(Math.abs(d) < 0.05) return 'Even';
+  return '+' + Math.abs(d).toFixed(1) + ' ' + (d>0 ? 'R' : 'D');
+}
+function renderTilt(){
+  const note = document.getElementById('tiltNote'), tc = document.getElementById('tierChart');
+  const hasTurnout = Object.keys(TURNOUT_BY_PRECINCT).length > 0;
+  if(!hasTurnout){
+    note.style.display = 'none';
+    tc.innerHTML = '<div class="empty">Fills in once a daily roster has been processed.</div>';
+    return;
+  }
+  const ls = leanStats(()=>true), d = tiltVal(ls);
+  const covered = ls.votes, allVotes = Object.values(TURNOUT_BY_PRECINCT).reduce((a,b)=>a+b,0);
+  let sentence;
+  if(d===null) sentence = '';
+  else if(Math.abs(d) < 1) sentence = 'Early voters so far are coming from precincts with about the same partisan lean as the county as a whole.';
+  else {
+    const side = d>0 ? 'Republican' : 'Democratic', amt = Math.abs(d) < 3 ? 'slightly more' : 'more';
+    sentence = `Early voters so far are coming from ${amt} ${side}-leaning precincts than the county as a whole.`;
+  }
+  note.style.display = '';
+  note.innerHTML = `<b>${sentence}</b> Early-vote lean ${leanTxt(ls.early)} vs. a county baseline of ${leanTxt(ls.base)} (tilt ${tiltTxt(ls)}).<small>This reflects where early voters live, based on past precinct results, not how they vote. It is not a prediction. Based on ${covered.toLocaleString()} of ${allVotes.toLocaleString()} precinct-matched early votes (precincts with partisan history).</small>`;
+
+  const tiers = [["Strong Democratic (under 40% R)", p=>p<.40], ["Lean Democratic (40\u201348% R)", p=>p>=.40&&p<.48], ["Competitive (48\u201352% R)", p=>p>=.48&&p<=.52], ["Lean Republican (52\u201360% R)", p=>p>.52&&p<=.60], ["Strong Republican (over 60% R)", p=>p>.60]];
+  const rows = tiers.map(([label, test])=>{
+    let reg=0, v=0;
+    PRECINCTS.forEach(pr=>{ const l=PARTISAN[pr.p], r=REGISTERED[pr.p]; if(l===undefined||!r||!test(l)) return; reg+=r; v+=TURNOUT_BY_PRECINCT[pr.p]||0; });
+    return {label, reg, v, rate: reg ? v/reg : 0};
+  });
+  const maxRate = Math.max(...rows.map(r=>r.rate), 0.0001);
+  tc.innerHTML = rows.map(r=>`<div class="tier"><div>${r.label}</div><div class="tiertxt"><div class="tierbar" style="width:${Math.max(1, r.rate/maxRate*55)}%"></div><b>${(r.rate*100).toFixed(2)}%</b><span>${r.v.toLocaleString()} of ${r.reg.toLocaleString()} registered</span></div></div>`).join('') + '<div class="mapnote">Early-vote turnout as a share of registered voters, grouped by each precinct\'s historical partisan lean.</div>';
+}
 
 function regByField(field){
   const m = {};
