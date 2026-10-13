@@ -53,6 +53,12 @@ footer{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.75rem; c
 .mappath:hover{opacity:.8; stroke:var(--ink); stroke-width:1.8;}
 .tooltip{position:absolute; pointer-events:none; background:var(--ink); color:var(--paper); font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.78rem; padding:8px 10px; max-width:220px; opacity:0; transition:opacity .1s; z-index:5; line-height:1.4;}
 .tooltip b{display:block; font-size:.85rem; margin-bottom:2px;}
+.mappath.dim{pointer-events:none; cursor:default;}
+#mapSvg{user-select:none; -webkit-user-select:none;}
+.pollmark{cursor:pointer;}
+.zoomctl{position:absolute; top:8px; right:8px; display:flex; flex-direction:column; gap:4px; z-index:6;}
+.zoomctl button{background:var(--card); color:var(--ink); border:1px solid var(--line); width:30px; height:30px; font-size:1rem; line-height:1; cursor:pointer; font-family:-apple-system,Helvetica,Arial,sans-serif;}
+.zoomctl button.wide{width:auto; padding:0 6px; font-size:.7rem; height:26px;}
 .mapnote{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.78rem; color:var(--muted); margin-top:10px;}
 .scaleLegend{display:flex; align-items:center; gap:2px; margin-top:10px; font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.72rem; color:var(--muted);}
 .scaleLegend .sw{width:22px; height:12px;}
@@ -92,6 +98,7 @@ footer{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.75rem; c
     <div class="mapwrap">
       <svg id="mapSvg" viewBox="0 0 6344.2 6419.7"></svg>
       <div class="tooltip" id="mapTip"></div>
+      <div class="zoomctl"><button id="zIn" aria-label="Zoom in">+</button><button id="zOut" aria-label="Zoom out">−</button><button id="zReset" class="wide">Reset</button></div>
     </div>
     <div class="scaleLegend" id="mapLegend"></div>
     <div class="mapnote" id="mapNote"></div>
@@ -240,6 +247,7 @@ function main(){
 
   render(DATA2026, GEO);
   renderMap();
+  initMapControls();
 }
 
 const COM_COLORS = {"1":"#F0AC42","2":"#504846","3":"#C98A2E","4":"#8C8279"};
@@ -281,6 +289,37 @@ function regColor(count){
   return `rgb(${Math.round(245-t*165)},${Math.round(238-t*166)},${Math.round(222-t*152)})`;
 }
 
+// Early voting locations, numbered as on the county's Nov 3, 2026 early voting schedule.
+// x,y are map units (geocoded with the U.S. Census geocoder); x:null means not yet placed.
+const POLLS = [{"n":1,"name":"ACTIV","addr":"2061 W Green Oaks Boulevard","city":"Arlington","x":4449,"y":4075},{"n":2,"name":"Bob Duncan Center","addr":"2800 S Center Street","city":"Arlington","x":5451,"y":4276},{"n":3,"name":"City of Arlington South Service Center","addr":"1100 SW Green Oaks Boulevard","city":"Arlington","x":5206,"y":4823},{"n":4,"name":"Elzie Odom Athletic Center","addr":"1601 NE Green Oaks Boulevard","city":"Arlington","x":5667,"y":3022},{"n":5,"name":"Tarrant County Subcourthouse in Arlington","addr":"700 E Abram Street","city":"Arlington","x":5537,"y":3710},{"n":6,"name":"Tarrant County College Southeast Campus","addr":"2100 Southeast Parkway","city":"Arlington","x":5872,"y":5080},{"n":7,"name":"Azle ISD PD","addr":"483 Sandy Beach Road, Suite A","city":"Azle","x":143,"y":971},{"n":8,"name":"Bedford Public Library","addr":"2424 Forest Ridge Drive","city":"Bedford","x":4994,"y":2120},{"n":9,"name":"Benbrook Community Center","addr":"228 San Angelo Avenue","city":"Benbrook","x":1159,"y":4553},{"n":10,"name":"Colleyville Recreation Center Annex A","addr":"5008 Roberts Road","city":"Colleyville","x":null,"y":null},{"n":11,"name":"Crouch Event Center in Bicentennial Park","addr":"900 E Glendale Street","city":"Crowley","x":2551,"y":5988},{"n":12,"name":"Euless Family Life Senior Center","addr":"300 W Midway Drive","city":"Euless","x":5720,"y":2127},{"n":13,"name":"Forest Hill Civic & Convention Center","addr":"6901 Wichita Street","city":"Forest Hill","x":3313,"y":4895},{"n":14,"name":"Everman Civic Center","addr":"213 N Race Street","city":"Everman","x":3262,"y":5176},{"n":15,"name":"Charles F. Griffin Building","addr":"3212 Miller Avenue","city":"Fort Worth","x":3548,"y":4072},{"n":16,"name":"Chisholm Trail Community Center","addr":"4936 McPherson Boulevard","city":"Fort Worth","x":null,"y":null},{"n":17,"name":"Como Community Center","addr":"4660 Horne Street","city":"Fort Worth","x":1761,"y":4046},{"n":18,"name":"Diamond Hill/Jarvis Branch Library","addr":"1300 NE 35th Street","city":"Fort Worth","x":2591,"y":2674},{"n":19,"name":"Dionne Phillips Bagsby Southwest Subcourthouse","addr":"6551 Granbury Road","city":"Fort Worth","x":1776,"y":4963},{"n":20,"name":"East Regional Library","addr":"6301 Bridge Street","city":"Fort Worth","x":4018,"y":3363},{"n":21,"name":"Handley-Meadowbrook Community Center","addr":"6201 Beaty Street","city":"Fort Worth","x":4031,"y":3670},{"n":22,"name":"Hazel Harvey Peace Center for Neighborhoods","addr":"818 Missouri Avenue","city":"Fort Worth","x":2853,"y":3730},{"n":23,"name":"Northpark YMCA","addr":"9100 N Beach Street","city":"Fort Worth","x":3186,"y":1262},{"n":24,"name":"Northside Community Center","addr":"1100 NW 18th Street","city":"Fort Worth","x":2308,"y":3120},{"n":25,"name":"Southwest Community Center","addr":"6300 Welch Avenue","city":"Fort Worth","x":2092,"y":4926},{"n":26,"name":"Summerglen Branch Library","addr":"4205 Basswood Boulevard","city":"Fort Worth","x":null,"y":null},{"n":27,"name":"Tarrant County College Northwest Campus","addr":"4801 Marine Creek Parkway","city":"Fort Worth","x":2018,"y":2378},{"n":28,"name":"Tarrant County Elections Center","addr":"2700 Premier Street","city":"Fort Worth","x":2902,"y":2870},{"n":29,"name":"Tarrant County Plaza Building","addr":"201 Burnett Street","city":"Fort Worth","x":2637,"y":3463},{"n":30,"name":"Worth Heights Community Center","addr":"3551 New York Avenue","city":"Fort Worth","x":2891,"y":4298},{"n":31,"name":"Asia Times Square","addr":"2615 W Pioneer Parkway","city":"Grand Prairie","x":6217,"y":4045},{"n":32,"name":"Grapevine Public Library","addr":"1201 Municipal Way","city":"Grapevine","x":5796,"y":887},{"n":33,"name":"Haltom City Senior Center","addr":"3201 Friendly Lane","city":"Haltom City","x":3392,"y":2686},{"n":34,"name":"Legacy Learning Center Northwest ISD","addr":"501 School House Road","city":"Haslet","x":2444,"y":358},{"n":35,"name":"Brookside Center","addr":"1244 Brookside Drive","city":"Hurst","x":4560,"y":2317},{"n":36,"name":"Gary Fickes Northeast Courthouse","addr":"645 Grapevine Highway","city":"Hurst","x":null,"y":null},{"n":37,"name":"Keller Town Hall","addr":"1100 Bear Creek Parkway","city":"Keller","x":3805,"y":945},{"n":38,"name":"Dover Fellowship Hall","addr":"208 Municipal Drive","city":"Kennedale","x":4029,"y":5038},{"n":39,"name":"Sheriff's Office North Patrol Division","addr":"6651 Lake Worth Boulevard","city":"Lake Worth","x":1436,"y":2648},{"n":40,"name":"Tarrant County Subcourthouse at Mansfield","addr":"1100 E Broad Street","city":"Mansfield","x":5229,"y":6192},{"n":41,"name":"Vernon Newsom Stadium","addr":"3700 E Broad Street","city":"Mansfield","x":5863,"y":5985},{"n":42,"name":"North Richland Hills City Hall","addr":"4301 City Point Drive","city":"North Richland Hills","x":4090,"y":2387},{"n":43,"name":"River Oaks Community Center","addr":"5300 Blackstone Drive","city":"River Oaks","x":1873,"y":3334},{"n":44,"name":"Saginaw Public Library","addr":"300 W McLeroy Boulevard","city":"Saginaw","x":2229,"y":1952},{"n":45,"name":"Southlake Town Hall","addr":"1400 Main Street","city":"Southlake","x":5129,"y":701},{"n":46,"name":"Town of Westlake Fire-EMS Department","addr":"2000 W Dove Road","city":"Westlake","x":4451,"y":192},{"n":47,"name":"White Settlement Public Library","addr":"8215 White Settlement Road","city":"White Settlement","x":1125,"y":3410}];
+// Total voters per location, keyed by location number, from the daily early voting by location report.
+const POLL_VOTES = {};
+
+// Map zoom/pan state (viewBox).
+const FULL = {x:0, y:0, w:6344.2, h:6419.7};
+let view = {...FULL};
+function clampView(){ view.x = Math.max(0, Math.min(FULL.w-view.w, view.x)); view.y = Math.max(0, Math.min(FULL.h-view.h, view.y)); }
+function applyView(){
+  const svg = document.getElementById("mapSvg");
+  svg.setAttribute("viewBox", `${view.x} ${view.y} ${view.w} ${view.h}`);
+  svg.style.touchAction = view.w < FULL.w-1 ? "none" : "auto";
+  svg.style.cursor = view.w < FULL.w-1 ? "grab" : "";
+}
+function zoomBy(f){
+  const cx = view.x+view.w/2, cy = view.y+view.h/2;
+  const w = Math.min(FULL.w, Math.max(FULL.w/12, view.w/f)), h = w*FULL.h/FULL.w;
+  view = {x:cx-w/2, y:cy-h/2, w, h}; clampView(); renderMap();
+}
+function initMapControls(){
+  document.getElementById("zIn").onclick = ()=>zoomBy(1.7);
+  document.getElementById("zOut").onclick = ()=>zoomBy(1/1.7);
+  document.getElementById("zReset").onclick = ()=>{ view = {...FULL}; renderMap(); };
+  const svg = document.getElementById("mapSvg"); let drag = null;
+  svg.addEventListener("pointerdown", e=>{ if(view.w >= FULL.w-1) return; drag = {x:e.clientX, y:e.clientY, vx:view.x, vy:view.y}; });
+  window.addEventListener("pointermove", e=>{ if(!drag) return; const u = view.w/svg.clientWidth; view.x = drag.vx-(e.clientX-drag.x)*u; view.y = drag.vy-(e.clientY-drag.y)*u; clampView(); applyView(); });
+  window.addEventListener("pointerup", ()=>{ drag = null; });
+}
+
 function renderMap(){
   const tools = document.getElementById('mapTools');
   const modes = [
@@ -291,11 +330,13 @@ function renderMap(){
     ["sen","Senate District"],
     ["hse","House District"],
     ["cong","Congressional District"],
+    ["polls","Polling Locations"],
   ];
   tools.innerHTML = modes.map(m=>`<button class="mapbtn${m[0]===mapMode?' active':''}" data-mode="${m[0]}">${m[1]}</button>`).join('');
   tools.querySelectorAll('button').forEach(b=> b.onclick = ()=>{ mapMode=b.dataset.mode; renderMap(); });
 
   const svg = document.getElementById('mapSvg');
+  applyView();
   const tip = document.getElementById('mapTip');
   const note = document.getElementById('mapNote');
   const legend = document.getElementById('mapLegend');
@@ -310,7 +351,9 @@ function renderMap(){
     let fill = "#C9C4B6", info = "";
     const regT = REGISTERED[pr.p], vtT = TURNOUT_BY_PRECINCT[pr.p];
     const turnStr = (regT && vtT!==undefined) ? `${vtT.toLocaleString()} of ${regT.toLocaleString()} registered (${(vtT/regT*100).toFixed(1)}%)` : "No turnout data yet";
-    if(mapMode==="commish"){
+    if(mapMode==="polls"){
+      fill = "#E6E1D4";
+    } else if(mapMode==="commish"){
       fill = COM_COLORS[pr.com] || "#C9C4B6";
       info = `Commissioner Pct ${pr.com}`;
     } else if(dm){
@@ -335,9 +378,27 @@ function renderMap(){
         info = `${side}+${margin.toFixed(1)} (R ${(p*100).toFixed(1)}% / D ${((1-p)*100).toFixed(1)}%)`;
       } else info = "No partisan history for this precinct (new for 2026)";
     }
-    return `<path class="mappath" d="${pr.d}" fill="${fill}" data-p="${pr.p}" data-info="${info.replace(/"/g,'&quot;')}" data-turn="${turnStr}" data-sen="${pr.sen}" data-hse="${pr.hse}" data-cong="${pr.cong}" data-com="${pr.com}"></path>`;
+    return `<path class="mappath${mapMode==="polls" ? " dim" : ""}" d="${pr.d}" fill="${fill}" data-p="${pr.p}" data-info="${info.replace(/"/g,'&quot;')}" data-turn="${turnStr}" data-sen="${pr.sen}" data-hse="${pr.hse}" data-cong="${pr.cong}" data-com="${pr.com}"></path>`;
   }).join('');
-  svg.innerHTML = paths;
+  let markers = "";
+  if(mapMode==="polls"){
+    const k = FULL.w/view.w, r = 62/k, fs = 78/k;
+    markers = POLLS.filter(p=>p.x!==null).map(p=>`<g class="pollmark" data-n="${p.n}" transform="translate(${p.x},${p.y})"><circle r="${r}" fill="#F0AC42" stroke="#3A332F" stroke-width="${2/k}"></circle><text y="${fs*0.35}" text-anchor="middle" font-size="${fs}" font-weight="700" fill="#3A332F" font-family="-apple-system,Helvetica,Arial,sans-serif" pointer-events="none">${p.n}</text></g>`).join('');
+  }
+  svg.innerHTML = paths + markers;
+
+  svg.querySelectorAll('.pollmark').forEach(el=>{
+    const p = POLLS.find(q=>q.n==el.dataset.n);
+    el.addEventListener('mousemove', e=>{
+      const rc = svg.parentElement.getBoundingClientRect();
+      tip.style.left = (e.clientX - rc.left + 12) + 'px';
+      tip.style.top = (e.clientY - rc.top + 12) + 'px';
+      tip.style.opacity = 1;
+      const v = POLL_VOTES[p.n];
+      tip.innerHTML = `<b>#${p.n} \u00b7 ${p.name}</b>${p.addr}, ${p.city}<br>${v!==undefined ? v.toLocaleString() + " voters" : "No voter data yet"}`;
+    });
+    el.addEventListener('mouseleave', ()=>{ tip.style.opacity = 0; });
+  });
 
   svg.querySelectorAll('.mappath').forEach(el=>{
     el.addEventListener('mousemove', e=>{
@@ -357,6 +418,10 @@ function renderMap(){
     legend.innerHTML = Object.entries(dcol).map(([k,c])=>`<span style="display:flex;align-items:center;gap:4px;margin-right:10px"><i class="sw" style="background:${c}"></i>${dm.short} ${k}</span>`).join('');
     legend.style.flexWrap = "wrap";
     note.textContent = `Precincts colored by ${dm.label.toLowerCase()}, showing the parts of each district inside Tarrant County.`;
+  } else if(mapMode==="polls"){
+    legend.innerHTML = `<span style="display:flex;align-items:center;gap:6px"><i class="sw" style="background:#F0AC42;border:1px solid #3A332F;border-radius:50%;width:14px;height:14px"></i>Early voting location (number matches the county's list)</span>`;
+    const missing = POLLS.filter(p=>p.x===null).map(p=>"#"+p.n);
+    note.textContent = `${POLLS.length-missing.length} of ${POLLS.length} locations plotted${missing.length ? " (not yet placed: " + missing.join(", ") + ")" : ""}. Hover a number for details; use + / \u2212 to zoom and drag to pan.`;
   } else if(mapMode==="registered"){
     legend.innerHTML = `<span style="margin-right:6px">Fewer</span><i class="sw" style="background:rgb(245,238,222)"></i><i class="sw" style="background:rgb(163,155,146)"></i><i class="sw" style="background:rgb(80,72,70)"></i><span style="margin-left:6px">More registered voters</span>`;
     note.textContent = "Registered voters per precinct, from the latest snapshot. Will be refreshed before early voting begins.";
