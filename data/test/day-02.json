@@ -5469,6 +5469,55 @@
    0
   ]
  },
+ "history_method": {
+  "base": [
+   539024,
+   276879.217,
+   117816,
+   152385,
+   11890,
+   178541,
+   78392
+  ],
+  "inperson": [
+   11054,
+   6963.733,
+   5194,
+   1625,
+   278,
+   1571,
+   2386
+  ],
+  "mail": [
+   1029,
+   469.55,
+   353,
+   109,
+   13,
+   129,
+   425
+  ]
+ },
+ "history_cross": {
+  "base": [
+   2118,
+   142714,
+   10052,
+   175816
+  ],
+  "early": [
+   84,
+   6069,
+   506,
+   4019
+  ]
+ },
+ "history_summary": {
+  "early_r_share": 61.5,
+  "base_r_share": 51.4,
+  "divergence_pts": 10.2,
+  "early_voters_on_list": 12083
+ },
  "history_coverage": {
   "early_voters_on_list": 12083,
   "roster_rows": 13389,

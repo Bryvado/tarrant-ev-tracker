@@ -70,7 +70,18 @@ def history_frame(path):
     df['R'] = (df[pe] == 'R').sum(axis=1); df['D'] = (df[pe] == 'D').sum(axis=1)
     df['share'] = df.R / (df.R + df.D); df['tier'] = [tier(r, d) for r, d in zip(df.R, df.D)]
     df['p'] = df.PRECINCT.astype(int); df['sq'] = df.share ** 2
+    df.attrs['pe'] = pe
     return df
+def total_agg(d):
+    t = d.tier.value_counts()
+    return [int(len(d)), round(float(d.share.sum()), 3)] + [int(t.get(i, 0)) for i in range(5)]
+def cross_groups(d, pe):
+    # Switchers: voted in the latest primary (PE2026) in one party, but had more votes in the OTHER party in all earlier primaries.
+    prior = [c for c in pe if c != 'PE2026']
+    pR, pD = (d[prior] == 'R').sum(axis=1), (d[prior] == 'D').sum(axis=1)
+    g1 = (d.PE2026 == 'R') & (pD > pR); g3 = (d.PE2026 == 'D') & (pR > pD)
+    g2 = (d.PE2026 == 'R') & ~g1; g4 = (d.PE2026 == 'D') & ~g3
+    return [int(g.sum()) for g in (g1, g2, g3, g4)]   # R-from-D, other R, D-from-R, other D
 def history_agg(d, with_sq=False):
     res = {}
     for p, g in d.groupby('p'):
@@ -84,7 +95,14 @@ if a.history:
     hdf = history_frame(a.history)
     ids = {r['SOS Voter ID'].strip().zfill(10) for r in inp + mail if r['SOS Voter ID'].strip()}
     early = hdf[hdf.VUID.isin(ids)]
+    ids_in = {r['SOS Voter ID'].strip().zfill(10) for r in inp if r['SOS Voter ID'].strip()}
+    ids_ml = {r['SOS Voter ID'].strip().zfill(10) for r in mail if r['SOS Voter ID'].strip()}
+    pe = hdf.attrs['pe']; E_, B_ = total_agg(early), total_agg(hdf)
     hist_out = {'history_early': history_agg(early),
+                'history_method': {'base': B_, 'inperson': total_agg(hdf[hdf.VUID.isin(ids_in)]), 'mail': total_agg(hdf[hdf.VUID.isin(ids_ml)])},
+                'history_cross': {'base': cross_groups(hdf, pe), 'early': cross_groups(early, pe)},
+                'history_summary': {'early_r_share': round(E_[1] / E_[0] * 100, 1), 'base_r_share': round(B_[1] / B_[0] * 100, 1),
+                                    'divergence_pts': round((E_[1] / E_[0] - B_[1] / B_[0]) * 100, 1), 'early_voters_on_list': E_[0]},
                 'history_coverage': {'early_voters_on_list': int(len(early)), 'roster_rows': len(inp) + len(mail),
                                      'rows_without_visible_id': sum(1 for r in inp + mail if not r['SOS Voter ID'].strip())}}
     if a.history_base_out:
