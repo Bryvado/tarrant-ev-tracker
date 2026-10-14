@@ -12,6 +12,12 @@ Rules (agreed with the project owner):
     checks this and warns if the redacted count ever differs from the rule (a sign the file format or policy changed).
   * Warn if a cumulative count goes DOWN versus the previous day.
 
+Optional primary-history step (--history FILE.xlsx, columns VUID, PRECINCT, PE2016..PE2026 with R/D/N): matches early voters to the
+owner's list of voters with primary history by SOS Voter ID (zero-padded to 10 digits) and saves AGGREGATES per precinct:
+[voters, sum of each voter's R share of primary votes, tier counts (Reliable R, Lean R, Even, Lean D, Reliable D)].
+Tiers: Reliable = 3+ primary votes all in one party; Lean = more votes in one party; Even = equal. The list itself is private and
+must never be committed; --history-base-out writes the all-voters aggregate (same format, plus sum of squared shares).
+
 usage: process_roster.py --label "Day 3" --day 3 --date 2026-10-21 --inperson FILE --mail FILE \
          [--prev data/daily/day-02.json] --out data/daily/day-03.json
 """
@@ -31,6 +37,7 @@ ap = argparse.ArgumentParser()
 ap.add_argument('--label', required=True); ap.add_argument('--day', type=int, required=True)
 ap.add_argument('--date', required=True, help='voting day the snapshot covers, YYYY-MM-DD')
 ap.add_argument('--inperson', required=True); ap.add_argument('--mail', required=True)
+ap.add_argument('--history'); ap.add_argument('--history-base-out');
 ap.add_argument('--prev'); ap.add_argument('--precincts', default='data/precincts.json'); ap.add_argument('--out', required=True)
 a = ap.parse_args()
 
@@ -51,6 +58,38 @@ red_check = {k: (sum(map(redacted, rs)) == expected_redactions(rs)) for k, rs in
 for k, ok in red_check.items():
     if not ok: print(f"WARNING: {k} redacted-row count does not match the 1-2 vote rule; check the file")
 
+def tier(r, d):
+    if r == d: return 2
+    if r > d: return 0 if (d == 0 and r >= 3) else 1
+    return 4 if (r == 0 and d >= 3) else 3
+def history_frame(path):
+    import pandas as pd
+    df = pd.read_excel(path, dtype=str)
+    df['VUID'] = df.VUID.str.zfill(10)
+    pe = [c for c in df.columns if c.startswith('PE')]
+    df['R'] = (df[pe] == 'R').sum(axis=1); df['D'] = (df[pe] == 'D').sum(axis=1)
+    df['share'] = df.R / (df.R + df.D); df['tier'] = [tier(r, d) for r, d in zip(df.R, df.D)]
+    df['p'] = df.PRECINCT.astype(int); df['sq'] = df.share ** 2
+    return df
+def history_agg(d, with_sq=False):
+    res = {}
+    for p, g in d.groupby('p'):
+        t = g.tier.value_counts()
+        row = [int(len(g)), round(float(g.share.sum()), 3)] + [int(t.get(i, 0)) for i in range(5)]
+        if with_sq: row.append(round(float(g.sq.sum()), 3))
+        res[str(int(p))] = row
+    return res
+hist_out = {}
+if a.history:
+    hdf = history_frame(a.history)
+    ids = {r['SOS Voter ID'].strip().zfill(10) for r in inp + mail if r['SOS Voter ID'].strip()}
+    early = hdf[hdf.VUID.isin(ids)]
+    hist_out = {'history_early': history_agg(early),
+                'history_coverage': {'early_voters_on_list': int(len(early)), 'roster_rows': len(inp) + len(mail),
+                                     'rows_without_visible_id': sum(1 for r in inp + mail if not r['SOS Voter ID'].strip())}}
+    if a.history_base_out:
+        json.dump(history_agg(hdf, with_sq=True), open(a.history_base_out, 'w'), separators=(',', ':'))
+
 out = {
     'label': a.label, 'day': a.day, 'snapshot_date': a.date,
     'in_person_cumulative': len(inp), 'mail_cumulative': len(mail),
@@ -59,6 +98,7 @@ out = {
     'redaction_rule_holds': red_check,
     'rows_unmatched_to_precinct': unmatched,
     'precincts': {str(k): v for k, v in sorted(counts.items())},
+    **hist_out,
 }
 if a.prev:
     prev = json.load(open(a.prev))
