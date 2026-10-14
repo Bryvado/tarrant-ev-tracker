@@ -12,3 +12,6 @@ and cumulative votes per precinct (mail + in-person).
 
 Produced by `scripts/process_roster.py` (rules are documented at the top of that file). To add a day, run it with the
 day's two roster files and the voting date, then rebuild the page.
+
+Redaction: the county redacts identity fields for any 6-digit roster precinct code with only 1-2 rows in a file, to protect ballot
+secrecy. Precinct and district codes stay intact, so counts here are unaffected. The script verifies the rule on every file.

@@ -9,6 +9,10 @@
   "in_person": 202,
   "mail": 387
  },
+ "redaction_rule_holds": {
+  "in_person": true,
+  "mail": true
+ },
  "rows_unmatched_to_precinct": 2540,
  "precincts": {
   "1005": 10,

@@ -7,6 +7,9 @@ Rules (agreed with the project owner):
   * Redacted rows (name/IDs blanked) are COUNTED; their precinct is intact. We never try to match them across days.
   * In-person has no date column: daily = this snapshot minus the previous day's. Mail daily = rows whose Return Date
     equals --date (accepts 2025-10-07 and 10/7/2025 formats).
+  * Redaction rule (confirmed by the election administrator and by the data): rows are redacted when their 6-digit roster
+    precinct code has only 1-2 rows in that file (cumulative). Codes reach 3 rows -> later files show real IDs. The script
+    checks this and warns if the redacted count ever differs from the rule (a sign the file format or policy changed).
   * Warn if a cumulative count goes DOWN versus the previous day.
 
 usage: process_roster.py --label "Day 3" --day 3 --date 2026-10-21 --inperson FILE --mail FILE \
@@ -41,11 +44,19 @@ for r in inp + mail:
     if p in known: counts[p] += 1
     else: unmatched += 1
 
+def expected_redactions(rows):
+    c = Counter(r['Precinct'] for r in rows)
+    return sum(n for n in c.values() if n <= 2)
+red_check = {k: (sum(map(redacted, rs)) == expected_redactions(rs)) for k, rs in (('in_person', inp), ('mail', mail))}
+for k, ok in red_check.items():
+    if not ok: print(f"WARNING: {k} redacted-row count does not match the 1-2 vote rule; check the file")
+
 out = {
     'label': a.label, 'day': a.day, 'snapshot_date': a.date,
     'in_person_cumulative': len(inp), 'mail_cumulative': len(mail),
     'mail_returned_that_day': sum(1 for r in mail if pdate(r['Return Date']) == day),
     'redacted_rows': {'in_person': sum(map(redacted, inp)), 'mail': sum(map(redacted, mail))},
+    'redaction_rule_holds': red_check,
     'rows_unmatched_to_precinct': unmatched,
     'precincts': {str(k): v for k, v in sorted(counts.items())},
 }
