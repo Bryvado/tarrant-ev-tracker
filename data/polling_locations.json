@@ -1,0 +1,378 @@
+[
+{
+"n": 1,
+"name": "ACTIV",
+"addr": "2061 W Green Oaks Boulevard",
+"city": "Arlington",
+"x": 4449,
+"y": 4075
+},
+{
+"n": 2,
+"name": "Bob Duncan Center",
+"addr": "2800 S Center Street",
+"city": "Arlington",
+"x": 5451,
+"y": 4276
+},
+{
+"n": 3,
+"name": "City of Arlington South Service Center",
+"addr": "1100 SW Green Oaks Boulevard",
+"city": "Arlington",
+"x": 5206,
+"y": 4823
+},
+{
+"n": 4,
+"name": "Elzie Odom Athletic Center",
+"addr": "1601 NE Green Oaks Boulevard",
+"city": "Arlington",
+"x": 5667,
+"y": 3022
+},
+{
+"n": 5,
+"name": "Tarrant County Subcourthouse in Arlington",
+"addr": "700 E Abram Street",
+"city": "Arlington",
+"x": 5537,
+"y": 3710
+},
+{
+"n": 6,
+"name": "Tarrant County College Southeast Campus",
+"addr": "2100 Southeast Parkway",
+"city": "Arlington",
+"x": 5872,
+"y": 5080
+},
+{
+"n": 7,
+"name": "Azle ISD PD",
+"addr": "483 Sandy Beach Road, Suite A",
+"city": "Azle",
+"x": 143,
+"y": 971
+},
+{
+"n": 8,
+"name": "Bedford Public Library",
+"addr": "2424 Forest Ridge Drive",
+"city": "Bedford",
+"x": 4994,
+"y": 2120
+},
+{
+"n": 9,
+"name": "Benbrook Community Center",
+"addr": "228 San Angelo Avenue",
+"city": "Benbrook",
+"x": 1159,
+"y": 4553
+},
+{
+"n": 10,
+"name": "Colleyville Recreation Center Annex A",
+"addr": "5008 Roberts Road",
+"city": "Colleyville",
+"x": 5383,
+"y": 1540
+},
+{
+"n": 11,
+"name": "Crouch Event Center in Bicentennial Park",
+"addr": "900 E Glendale Street",
+"city": "Crowley",
+"x": 2551,
+"y": 5988
+},
+{
+"n": 12,
+"name": "Euless Family Life Senior Center",
+"addr": "300 W Midway Drive",
+"city": "Euless",
+"x": 5720,
+"y": 2127
+},
+{
+"n": 13,
+"name": "Forest Hill Civic & Convention Center",
+"addr": "6901 Wichita Street",
+"city": "Forest Hill",
+"x": 3313,
+"y": 4895
+},
+{
+"n": 14,
+"name": "Everman Civic Center",
+"addr": "213 N Race Street",
+"city": "Everman",
+"x": 3262,
+"y": 5176
+},
+{
+"n": 15,
+"name": "Charles F. Griffin Building",
+"addr": "3212 Miller Avenue",
+"city": "Fort Worth",
+"x": 3548,
+"y": 4072
+},
+{
+"n": 16,
+"name": "Chisholm Trail Community Center",
+"addr": "4936 McPherson Boulevard",
+"city": "Fort Worth",
+"x": 1863,
+"y": 5621
+},
+{
+"n": 17,
+"name": "Como Community Center",
+"addr": "4660 Horne Street",
+"city": "Fort Worth",
+"x": 1761,
+"y": 4046
+},
+{
+"n": 18,
+"name": "Diamond Hill/Jarvis Branch Library",
+"addr": "1300 NE 35th Street",
+"city": "Fort Worth",
+"x": 2591,
+"y": 2674
+},
+{
+"n": 19,
+"name": "Dionne Phillips Bagsby Southwest Subcourthouse",
+"addr": "6551 Granbury Road",
+"city": "Fort Worth",
+"x": 1776,
+"y": 4963
+},
+{
+"n": 20,
+"name": "East Regional Library",
+"addr": "6301 Bridge Street",
+"city": "Fort Worth",
+"x": 4018,
+"y": 3363
+},
+{
+"n": 21,
+"name": "Handley-Meadowbrook Community Center",
+"addr": "6201 Beaty Street",
+"city": "Fort Worth",
+"x": 4031,
+"y": 3670
+},
+{
+"n": 22,
+"name": "Hazel Harvey Peace Center for Neighborhoods",
+"addr": "818 Missouri Avenue",
+"city": "Fort Worth",
+"x": 2853,
+"y": 3730
+},
+{
+"n": 23,
+"name": "Northpark YMCA",
+"addr": "9100 N Beach Street",
+"city": "Fort Worth",
+"x": 3186,
+"y": 1262
+},
+{
+"n": 24,
+"name": "Northside Community Center",
+"addr": "1100 NW 18th Street",
+"city": "Fort Worth",
+"x": 2308,
+"y": 3120
+},
+{
+"n": 25,
+"name": "Southwest Community Center",
+"addr": "6300 Welch Avenue",
+"city": "Fort Worth",
+"x": 2092,
+"y": 4926
+},
+{
+"n": 26,
+"name": "Summerglen Branch Library",
+"addr": "4205 Basswood Boulevard",
+"city": "Fort Worth",
+"x": 3157,
+"y": 1723
+},
+{
+"n": 27,
+"name": "Tarrant County College Northwest Campus",
+"addr": "4801 Marine Creek Parkway",
+"city": "Fort Worth",
+"x": 2018,
+"y": 2378
+},
+{
+"n": 28,
+"name": "Tarrant County Elections Center",
+"addr": "2700 Premier Street",
+"city": "Fort Worth",
+"x": 2902,
+"y": 2870
+},
+{
+"n": 29,
+"name": "Tarrant County Plaza Building",
+"addr": "201 Burnett Street",
+"city": "Fort Worth",
+"x": 2637,
+"y": 3463
+},
+{
+"n": 30,
+"name": "Worth Heights Community Center",
+"addr": "3551 New York Avenue",
+"city": "Fort Worth",
+"x": 2891,
+"y": 4298
+},
+{
+"n": 31,
+"name": "Asia Times Square",
+"addr": "2615 W Pioneer Parkway",
+"city": "Grand Prairie",
+"x": 6217,
+"y": 4045
+},
+{
+"n": 32,
+"name": "Grapevine Public Library",
+"addr": "1201 Municipal Way",
+"city": "Grapevine",
+"x": 5796,
+"y": 887
+},
+{
+"n": 33,
+"name": "Haltom City Senior Center",
+"addr": "3201 Friendly Lane",
+"city": "Haltom City",
+"x": 3392,
+"y": 2686
+},
+{
+"n": 34,
+"name": "Legacy Learning Center Northwest ISD",
+"addr": "501 School House Road",
+"city": "Haslet",
+"x": 2444,
+"y": 358
+},
+{
+"n": 35,
+"name": "Brookside Center",
+"addr": "1244 Brookside Drive",
+"city": "Hurst",
+"x": 4560,
+"y": 2317
+},
+{
+"n": 36,
+"name": "Gary Fickes Northeast Courthouse",
+"addr": "645 Grapevine Highway",
+"city": "Hurst",
+"x": 4562,
+"y": 1892
+},
+{
+"n": 37,
+"name": "Keller Town Hall",
+"addr": "1100 Bear Creek Parkway",
+"city": "Keller",
+"x": 3805,
+"y": 945
+},
+{
+"n": 38,
+"name": "Dover Fellowship Hall",
+"addr": "208 Municipal Drive",
+"city": "Kennedale",
+"x": 4029,
+"y": 5038
+},
+{
+"n": 39,
+"name": "Sheriff's Office North Patrol Division",
+"addr": "6651 Lake Worth Boulevard",
+"city": "Lake Worth",
+"x": 1436,
+"y": 2648
+},
+{
+"n": 40,
+"name": "Tarrant County Subcourthouse at Mansfield",
+"addr": "1100 E Broad Street",
+"city": "Mansfield",
+"x": 5229,
+"y": 6192
+},
+{
+"n": 41,
+"name": "Vernon Newsom Stadium",
+"addr": "3700 E Broad Street",
+"city": "Mansfield",
+"x": 5863,
+"y": 5985
+},
+{
+"n": 42,
+"name": "North Richland Hills City Hall",
+"addr": "4301 City Point Drive",
+"city": "North Richland Hills",
+"x": 4090,
+"y": 2387
+},
+{
+"n": 43,
+"name": "River Oaks Community Center",
+"addr": "5300 Blackstone Drive",
+"city": "River Oaks",
+"x": 1873,
+"y": 3334
+},
+{
+"n": 44,
+"name": "Saginaw Public Library",
+"addr": "300 W McLeroy Boulevard",
+"city": "Saginaw",
+"x": 2229,
+"y": 1952
+},
+{
+"n": 45,
+"name": "Southlake Town Hall",
+"addr": "1400 Main Street",
+"city": "Southlake",
+"x": 5129,
+"y": 701
+},
+{
+"n": 46,
+"name": "Town of Westlake Fire-EMS Department",
+"addr": "2000 W Dove Road",
+"city": "Westlake",
+"x": 4451,
+"y": 192
+},
+{
+"n": 47,
+"name": "White Settlement Public Library",
+"addr": "8215 White Settlement Road",
+"city": "White Settlement",
+"x": 1125,
+"y": 3410
+}
+]
