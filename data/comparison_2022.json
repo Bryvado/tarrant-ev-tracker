@@ -1,0 +1,110 @@
+[
+{
+"day": 1,
+"date": "10/24/22",
+"inperson_daily": 29194,
+"inperson_cumulative": 29194,
+"mail_daily": 11489,
+"mail_cumulative": 11489,
+"total_cumulative": 40683
+},
+{
+"day": 2,
+"date": "10/25/22",
+"inperson_daily": 34733,
+"inperson_cumulative": 63927,
+"mail_daily": 108,
+"mail_cumulative": 11597,
+"total_cumulative": 75524
+},
+{
+"day": 3,
+"date": "10/26/22",
+"inperson_daily": 32850,
+"inperson_cumulative": 96777,
+"mail_daily": 1101,
+"mail_cumulative": 12698,
+"total_cumulative": 109475
+},
+{
+"day": 4,
+"date": "10/27/22",
+"inperson_daily": 31017,
+"inperson_cumulative": 127794,
+"mail_daily": 1515,
+"mail_cumulative": 14213,
+"total_cumulative": 142007
+},
+{
+"day": 5,
+"date": "10/28/22",
+"inperson_daily": 29652,
+"inperson_cumulative": 157446,
+"mail_daily": 1315,
+"mail_cumulative": 15528,
+"total_cumulative": 172974
+},
+{
+"day": 6,
+"date": "10/29/22 (Sat)",
+"inperson_daily": 30041,
+"inperson_cumulative": 187487,
+"mail_daily": 975,
+"mail_cumulative": 16503,
+"total_cumulative": 203990
+},
+{
+"day": 7,
+"date": "10/30/22 (Sun)",
+"inperson_daily": 11540,
+"inperson_cumulative": 199027,
+"mail_daily": 0,
+"mail_cumulative": 16503,
+"total_cumulative": 215530
+},
+{
+"day": 8,
+"date": "10/31/22",
+"inperson_daily": 32876,
+"inperson_cumulative": 231903,
+"mail_daily": 1021,
+"mail_cumulative": 17524,
+"total_cumulative": 249427
+},
+{
+"day": 9,
+"date": "11/01/22",
+"inperson_daily": 32479,
+"inperson_cumulative": 264382,
+"mail_daily": 148,
+"mail_cumulative": 17672,
+"total_cumulative": 282054
+},
+{
+"day": 10,
+"date": "11/02/22",
+"inperson_daily": 33125,
+"inperson_cumulative": 297507,
+"mail_daily": 709,
+"mail_cumulative": 18381,
+"total_cumulative": 315888
+},
+{
+"day": 11,
+"date": "11/03/22",
+"inperson_daily": 40024,
+"inperson_cumulative": 337531,
+"mail_daily": 775,
+"mail_cumulative": 19156,
+"total_cumulative": 356687
+},
+{
+"day": 12,
+"date": "11/04/22",
+"inperson_daily": 51754,
+"inperson_cumulative": 389285,
+"mail_daily": 1186,
+"mail_cumulative": 20342,
+"total_cumulative": 409627
+}
+]

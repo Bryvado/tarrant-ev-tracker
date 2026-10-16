@@ -95,7 +95,7 @@ footer{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.75rem; c
       <span><i class="dot" style="background:var(--accent)"></i>Mail cumulative</span>
       <span><i class="dot" style="background:var(--accent2)"></i>In-person cumulative</span>
       <span><i class="dot" style="background:var(--ink)"></i>Total (mail + in-person)</span>
-      <span><i class="dot" style="background:#6B6558; opacity:.7"></i>2022 comparison (in-person, dashed)</span>
+      <span><i class="dot" style="background:var(--muted); opacity:.7"></i>Dashed lines: the same three series in 2022</span>
     </div>
   </section>
 
@@ -161,27 +161,30 @@ footer{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.75rem; c
 
 <script>
 // 2026 daily data — Claude appends one entry per early-voting day (Oct 19–30, 2026) and republishes.
+// Day 1 mail_daily includes all mail ballots returned before early voting began (rolled up), matching the 2022 comparison.
 // date: calendar date. day: 1-12, position within the EV window, used to align with the 2022 comparison.
 const DATA2026 = [
-  { date:"TEST: Nov 2025 Day 1", day:1, mail_daily:181, mail_cumulative:1472, inperson_daily:5410, inperson_cumulative:5410, tilt:11.1 },
+  { date:"TEST: Nov 2025 Day 1", day:1, mail_daily:1472, mail_cumulative:1472, inperson_daily:5410, inperson_cumulative:5410, tilt:11.1 },
   { date:"TEST: Nov 2025 Day 2", day:2, mail_daily:16, mail_cumulative:1488, inperson_daily:6491, inperson_cumulative:11901, tilt:13.1, hist_e:61.5, hist_d:10.2 }
 ];
 
-// 2022 general election comparison baseline (in-person EV only), extracted from the county's
-// Nov 8, 2022 Early Voting Totals report, Oct 24–Nov 4, 2022 (also a 12-day EV window).
+// 2022 general election comparison baseline, from the county's Nov 8, 2022 Early Voting Totals report, Oct 24–Nov 4, 2022
+// (also a 12-day EV window). In-person is the report's daily totals. Mail is its "Mailed Ballots Returned by Date" table, aligned to
+// early voting days: everything returned before and on Day 1 (Oct 24) is rolled up into Day 1, and days with no mail entry
+// (Sun Oct 30) carry the previous total forward. Total = in-person + mail.
 const DATA2022 = [
-  {day:1, date:"10/24/22", inperson_daily:29194, inperson_cumulative:29194},
-  {day:2, date:"10/25/22", inperson_daily:34733, inperson_cumulative:63927},
-  {day:3, date:"10/26/22", inperson_daily:32850, inperson_cumulative:96777},
-  {day:4, date:"10/27/22", inperson_daily:31017, inperson_cumulative:127794},
-  {day:5, date:"10/28/22", inperson_daily:29652, inperson_cumulative:157446},
-  {day:6, date:"10/29/22 (Sat)", inperson_daily:30041, inperson_cumulative:187487},
-  {day:7, date:"10/30/22 (Sun)", inperson_daily:11540, inperson_cumulative:199027},
-  {day:8, date:"10/31/22", inperson_daily:32876, inperson_cumulative:231903},
-  {day:9, date:"11/01/22", inperson_daily:32479, inperson_cumulative:264382},
-  {day:10, date:"11/02/22", inperson_daily:33125, inperson_cumulative:297507},
-  {day:11, date:"11/03/22", inperson_daily:40024, inperson_cumulative:337531},
-  {day:12, date:"11/04/22", inperson_daily:51754, inperson_cumulative:389285},
+  {day:1, date:"10/24/22", inperson_daily:29194, inperson_cumulative:29194, mail_daily:11489, mail_cumulative:11489, total_cumulative:40683},
+  {day:2, date:"10/25/22", inperson_daily:34733, inperson_cumulative:63927, mail_daily:108, mail_cumulative:11597, total_cumulative:75524},
+  {day:3, date:"10/26/22", inperson_daily:32850, inperson_cumulative:96777, mail_daily:1101, mail_cumulative:12698, total_cumulative:109475},
+  {day:4, date:"10/27/22", inperson_daily:31017, inperson_cumulative:127794, mail_daily:1515, mail_cumulative:14213, total_cumulative:142007},
+  {day:5, date:"10/28/22", inperson_daily:29652, inperson_cumulative:157446, mail_daily:1315, mail_cumulative:15528, total_cumulative:172974},
+  {day:6, date:"10/29/22 (Sat)", inperson_daily:30041, inperson_cumulative:187487, mail_daily:975, mail_cumulative:16503, total_cumulative:203990},
+  {day:7, date:"10/30/22 (Sun)", inperson_daily:11540, inperson_cumulative:199027, mail_daily:0, mail_cumulative:16503, total_cumulative:215530},
+  {day:8, date:"10/31/22", inperson_daily:32876, inperson_cumulative:231903, mail_daily:1021, mail_cumulative:17524, total_cumulative:249427},
+  {day:9, date:"11/01/22", inperson_daily:32479, inperson_cumulative:264382, mail_daily:148, mail_cumulative:17672, total_cumulative:282054},
+  {day:10, date:"11/02/22", inperson_daily:33125, inperson_cumulative:297507, mail_daily:709, mail_cumulative:18381, total_cumulative:315888},
+  {day:11, date:"11/03/22", inperson_daily:40024, inperson_cumulative:337531, mail_daily:775, mail_cumulative:19156, total_cumulative:356687},
+  {day:12, date:"11/04/22", inperson_daily:51754, inperson_cumulative:389285, mail_daily:1186, mail_cumulative:20342, total_cumulative:409627},
 ];
 
 // Latest geographic/roster breakdown, when Claude has processed an uploaded roster file.
@@ -237,6 +240,8 @@ function main(){
         const pct = ((last.inperson_cumulative/base22.inperson_cumulative)-1)*100;
         const sign = pct>=0?'+':'';
         cells.push([sign+pct.toFixed(1)+'%', 'In-person vs. 2022, same day #'+last.day]);
+        const pt = (((last.mail_cumulative||0)+(last.inperson_cumulative||0))/base22.total_cumulative-1)*100;
+        cells.push([(pt>=0?'+':'')+pt.toFixed(1)+'%', 'Total vs. 2022, same day #'+last.day]);
       }
       stats.innerHTML = cells.map(c=>`<div class="stat"><div class="n">${c[0]}</div><div class="l">${c[1]}</div></div>`).join('');
     }
@@ -246,7 +251,7 @@ function main(){
     const w=880,h=260,pad=36,nDays=12;
     const maxY = Math.max(
       ...days.map(d=>(d.mail_cumulative||0)+(d.inperson_cumulative||0)),
-      ...DATA2022.map(d=>d.inperson_cumulative),
+      ...DATA2022.map(d=>d.total_cumulative),
       1
     );
     const x = day => pad + (day-1)*(w-2*pad)/(nDays-1);
@@ -254,7 +259,9 @@ function main(){
     const line = (arr, dayKey, valKey) => arr.map((d,i)=> (i===0?'M':'L')+x(d[dayKey])+','+y(d[valKey])).join(' ');
     let svg = `<svg viewBox="0 0 ${w} ${h}">`;
     svg += `<line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="var(--line)"/>`;
-    svg += `<path d="${line(DATA2022,'day','inperson_cumulative')}" fill="none" stroke="#6B6558" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"/>`;
+    [['mail_cumulative','var(--accent)',1.5],['inperson_cumulative','var(--accent2)',1.5],['total_cumulative','var(--ink)',2]].forEach(([k,c,w])=>{
+      svg += `<path d="${line(DATA2022,'day',k)}" fill="none" style="stroke:${c}" stroke-width="${w}" stroke-dasharray="5 4" opacity="0.6"/>`;
+    });
     if(days.length){
       const withTotal = days.map(d=>({...d, total_cumulative:(d.mail_cumulative||0)+(d.inperson_cumulative||0)}));
       [['mail_cumulative','var(--accent)',2],['inperson_cumulative','var(--accent2)',2],['total_cumulative','var(--ink)',3]].forEach(([k,c,w])=>{
@@ -265,7 +272,7 @@ function main(){
     svg += `</svg>`;
     chart.innerHTML = svg;
     if(!days.length){
-      chart.innerHTML += '<div class="empty" style="margin-top:8px">2026 lines will appear once daily totals are logged. The dashed line is the 2022 comparison, already loaded.</div>';
+      chart.innerHTML += '<div class="empty" style="margin-top:8px">2026 lines will appear once daily totals are logged. The dashed lines are the 2022 comparison, already loaded.</div>';
     }
 
     // daily table

@@ -5,6 +5,8 @@ Rules (agreed with the project owner):
   * Each roster is a full end-of-day snapshot. Cumulative = row count of the latest file; never add rows across files.
   * Precinct = first 4 digits of the roster's 6-digit Precinct code; it must exist in data/precincts.json.
   * Redacted rows (name/IDs blanked) are COUNTED; their precinct is intact. We never try to match them across days.
+  * Day 1 rolls up: mail ballots returned before early voting began count as Day 1's mail (mail_new = cumulative on Day 1;
+    afterwards mail_new = change in cumulative). Same rule as the 2022 comparison line. mail_returned_that_day (by Return Date) is kept too.
   * In-person has no date column: daily = this snapshot minus the previous day's. Mail daily = rows whose Return Date
     equals --date (accepts 2025-10-07 and 10/7/2025 formats).
   * Redaction rule (confirmed by the election administrator and by the data): rows are redacted when their 6-digit roster
@@ -121,11 +123,13 @@ out = {
 if a.prev:
     prev = json.load(open(a.prev))
     out['in_person_new'] = len(inp) - prev['in_person_cumulative']
+    out['mail_new'] = len(mail) - prev['mail_cumulative']
     for k in ('in_person', 'mail'):
         if out[k + '_cumulative'] < prev[k + '_cumulative']:
             print(f"WARNING: {k} cumulative dropped from {prev[k+'_cumulative']} to {out[k+'_cumulative']}")
 else:
     out['in_person_new'] = len(inp)
+    out['mail_new'] = len(mail)
 json.dump(out, open(a.out, 'w'), indent=1)
 print(f"{a.out}: in-person {len(inp):,} (+{out['in_person_new']:,}), mail {len(mail):,} ({out['mail_returned_that_day']} returned that day), "
       f"redacted {out['redacted_rows']}, unmatched {unmatched:,}")
