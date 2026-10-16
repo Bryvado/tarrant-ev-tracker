@@ -19,3 +19,6 @@ secrecy. Precinct and district codes stay intact, so counts here are unaffected.
 Primary history: `history_base.json` holds per-precinct aggregates of the owner's primary-history list (voters, sum of R share,
 tier counts, sum of squared shares). Daily files add `history_early` for that day's early voters. The voter-level list itself is
 private, is never committed (`.gitignore`), and is supplied to the script with `--history` each time.
+
+Launch state (Oct 2026): the page ships with no 2026 early voting data. `test/` holds the Nov 2025 dry run (kept for reference); real days go in `daily/`.
+`registered_voters.json` is the final registration snapshot; `history_base.json` is rebuilt from the current primary-history list (541,412 voters).
