@@ -94,6 +94,7 @@ footer{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.75rem; c
     <div class="legend">
       <span><i class="dot" style="background:var(--accent)"></i>Mail cumulative</span>
       <span><i class="dot" style="background:var(--accent2)"></i>In-person cumulative</span>
+      <span><i class="dot" style="background:var(--ink)"></i>Total (mail + in-person)</span>
       <span><i class="dot" style="background:#6B6558; opacity:.7"></i>2022 comparison (in-person, dashed)</span>
     </div>
   </section>
@@ -255,8 +256,11 @@ function main(){
     svg += `<line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="var(--line)"/>`;
     svg += `<path d="${line(DATA2022,'day','inperson_cumulative')}" fill="none" stroke="#6B6558" stroke-width="1.5" stroke-dasharray="4 3" opacity="0.7"/>`;
     if(days.length){
-      svg += `<path d="${line(days,'day','mail_cumulative')}" fill="none" style="stroke:var(--accent)" stroke-width="2"/>`;
-      svg += `<path d="${line(days,'day','inperson_cumulative')}" fill="none" style="stroke:var(--accent2)" stroke-width="2"/>`;
+      const withTotal = days.map(d=>({...d, total_cumulative:(d.mail_cumulative||0)+(d.inperson_cumulative||0)}));
+      [['mail_cumulative','var(--accent)',2],['inperson_cumulative','var(--accent2)',2],['total_cumulative','var(--ink)',3]].forEach(([k,c,w])=>{
+        svg += `<path d="${line(withTotal,'day',k)}" fill="none" style="stroke:${c}" stroke-width="${w}"/>`;
+        svg += withTotal.map(d=>`<circle cx="${x(d.day)}" cy="${y(d[k])}" r="3.5" style="fill:${c}"></circle>`).join('');
+      });
     }
     svg += `</svg>`;
     chart.innerHTML = svg;
