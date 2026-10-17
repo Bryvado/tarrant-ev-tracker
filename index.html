@@ -89,6 +89,7 @@ footer{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.75rem; c
 
   <section>
     <h2>Cumulative turnout</h2>
+    <div class="maptools" id="chartTools"></div>
     <div id="chart"></div>
     <div class="legend">
       <span><i class="dot" style="background:var(--accent)"></i>Mail cumulative</span>
@@ -242,34 +243,7 @@ function main(){
       stats.innerHTML = cells.map(c=>`<div class="stat"><div class="n">${c[0]}</div><div class="l">${c[1]}</div></div>`).join('');
     }
 
-    // chart — x axis is "day of EV window" (1-12) so 2026 and 2022 align regardless of calendar date
-    const chart = document.getElementById('chart');
-    const w=880,h=260,pad=36,nDays=12;
-    const maxY = Math.max(
-      ...days.map(d=>(d.mail_cumulative||0)+(d.inperson_cumulative||0)),
-      ...DATA2022.map(d=>d.total_cumulative),
-      1
-    );
-    const x = day => pad + (day-1)*(w-2*pad)/(nDays-1);
-    const y = v => h-pad - (v/maxY)*(h-2*pad);
-    const line = (arr, dayKey, valKey) => arr.map((d,i)=> (i===0?'M':'L')+x(d[dayKey])+','+y(d[valKey])).join(' ');
-    let svg = `<svg viewBox="0 0 ${w} ${h}">`;
-    svg += `<line x1="${pad}" y1="${h-pad}" x2="${w-pad}" y2="${h-pad}" stroke="var(--line)"/>`;
-    [['mail_cumulative','var(--accent)',1.5],['inperson_cumulative','var(--accent2)',1.5],['total_cumulative','var(--ink)',2]].forEach(([k,c,w])=>{
-      svg += `<path d="${line(DATA2022,'day',k)}" fill="none" style="stroke:${c}" stroke-width="${w}" stroke-dasharray="5 4" opacity="0.6"/>`;
-    });
-    if(days.length){
-      const withTotal = days.map(d=>({...d, total_cumulative:(d.mail_cumulative||0)+(d.inperson_cumulative||0)}));
-      [['mail_cumulative','var(--accent)',2],['inperson_cumulative','var(--accent2)',2],['total_cumulative','var(--ink)',3]].forEach(([k,c,w])=>{
-        svg += `<path d="${line(withTotal,'day',k)}" fill="none" style="stroke:${c}" stroke-width="${w}"/>`;
-        svg += withTotal.map(d=>`<circle cx="${x(d.day)}" cy="${y(d[k])}" r="3.5" style="fill:${c}"></circle>`).join('');
-      });
-    }
-    svg += `</svg>`;
-    chart.innerHTML = svg;
-    if(!days.length){
-      chart.innerHTML += '<div class="empty" style="margin-top:8px">2026 lines will appear once daily totals are logged. The dashed lines are the 2022 comparison, already loaded.</div>';
-    }
+    renderChart(days);
 
     // daily table
     const dt = document.getElementById('dailyTable');
@@ -567,6 +541,51 @@ function initMapControls(){
   svg.addEventListener("pointerdown", e=>{ if(view.w >= FULL.w-1) return; drag = {x:e.clientX, y:e.clientY, vx:view.x, vy:view.y}; });
   window.addEventListener("pointermove", e=>{ if(!drag) return; const u = view.w/svg.clientWidth; view.x = drag.vx-(e.clientX-drag.x)*u; view.y = drag.vy-(e.clientY-drag.y)*u; clampView(); applyView(); });
   window.addEventListener("pointerup", ()=>{ drag = null; });
+}
+
+let chartView = "all";
+const CHART_VIEWS = [["all","All"],["total","Total"],["inperson","In-person"],["mail","Mail"]];
+function niceStep(max){
+  const raw = max/5, mag = Math.pow(10, Math.floor(Math.log10(raw))), f = raw/mag;
+  return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * mag;
+}
+// Cumulative turnout chart. x axis is "day of EV window" (1-12) so 2026 and 2022 line up regardless of calendar date.
+// The y axis rescales to the series shown, so the smaller mail line can be read on its own scale.
+function renderChart(days){
+  const chart = document.getElementById('chart'), tools = document.getElementById('chartTools');
+  tools.innerHTML = CHART_VIEWS.map(v=>`<button class="mapbtn${v[0]===chartView ? ' active' : ''}" data-v="${v[0]}">${v[1]}</button>`).join('');
+  tools.querySelectorAll('button').forEach(b=>{ b.onclick = ()=>{ chartView = b.dataset.v; renderChart(days); }; });
+  const withTotal = days.map(d=>({...d, total_cumulative:(d.mail_cumulative||0)+(d.inperson_cumulative||0)}));
+  const series = [
+    {k:'mail_cumulative', c:'var(--accent)', w:2, label:'Mail', v:['all','mail']},
+    {k:'inperson_cumulative', c:'var(--accent2)', w:2, label:'In-person', v:['all','inperson']},
+    {k:'total_cumulative', c:'var(--ink)', w:3, label:'Total', v:['all','total']},
+  ].filter(s=>s.v.includes(chartView));
+  const top = Math.max(1, ...series.map(s=>Math.max(...DATA2022.map(d=>d[s.k]), ...withTotal.map(d=>d[s.k]||0))));
+  const step = niceStep(top), maxY = Math.ceil(top/step)*step;
+  const w = 880, h = 300, padL = 66, padR = 24, padT = 14, padB = 40, nDays = 12;
+  const x = day => padL + (day-1)*(w-padL-padR)/(nDays-1);
+  const y = v => h-padB - (v/maxY)*(h-padT-padB);
+  const line = (arr, k) => arr.map((d,i)=>(i===0 ? 'M' : 'L') + x(d.day) + ',' + y(d[k])).join(' ');
+  let svg = `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Cumulative early voting turnout by day, compared with 2022">`;
+  for(let t = 0; t <= maxY + 1; t += step){
+    svg += `<line x1="${padL}" y1="${y(t)}" x2="${w-padR}" y2="${y(t)}" style="stroke:var(--line)" stroke-width="1"/><text x="${padL-8}" y="${y(t)+4}" text-anchor="end" font-size="11" style="fill:var(--muted)">${t.toLocaleString()}</text>`;
+  }
+  for(let d = 1; d <= nDays; d++) svg += `<text x="${x(d)}" y="${h-padB+16}" text-anchor="middle" font-size="11" style="fill:var(--muted)">${d}</text>`;
+  svg += `<text x="${(padL+w-padR)/2}" y="${h-6}" text-anchor="middle" font-size="12" style="fill:var(--ink)">Day of early voting</text>`;
+  series.forEach(s=>{
+    svg += `<path d="${line(DATA2022, s.k)}" fill="none" style="stroke:${s.c}" stroke-width="${s.w-0.5}" stroke-dasharray="5 4" opacity="0.6"/>`;
+  });
+  if(days.length){
+    series.forEach(s=>{
+      svg += `<path d="${line(withTotal, s.k)}" fill="none" style="stroke:${s.c}" stroke-width="${s.w}"/>`;
+      svg += withTotal.map(d=>`<circle cx="${x(d.day)}" cy="${y(d[s.k])}" r="3.5" style="fill:${s.c}"><title>${s.label}, ${d.date}: ${(d[s.k]||0).toLocaleString()}</title></circle>`).join('');
+    });
+  }
+  chart.innerHTML = svg + '</svg>';
+  if(!days.length){
+    chart.innerHTML += '<div class="empty" style="margin-top:8px">2026 lines will appear once daily totals are logged. The dashed lines are the 2022 comparison, already loaded.</div>';
+  }
 }
 
 function histStr(p){
