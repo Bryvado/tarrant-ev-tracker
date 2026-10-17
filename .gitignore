@@ -5,3 +5,4 @@ node_modules/
 # Never commit the voter-level primary history list (aggregates only)
 *.xlsx
 PrimaryVotingHistory*
+out/

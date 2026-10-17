@@ -719,7 +719,7 @@ function renderMap(){
     legend.innerHTML = haveTurnoutData ? `<i class="sw" style="background:rgb(247,240,230)"></i><span style="margin-right:8px">Lower turnout</span><i class="sw" style="background:rgb(240,172,66)"></i><span>Higher turnout</span>` : '';
     note.textContent = haveTurnoutData ? "Cumulative EV turnout as a share of registered voters, by precinct." : "Early voting opens Monday, Oct 19. This view fills in once the first day's numbers are posted.";
   } else {
-    legend.innerHTML = havePartisanData ? `<span style="margin-right:6px">D+50</span><i class="sw" style="background:#1F5C6F"></i><i class="sw" style="background:#8E8F8B"></i><i class="sw" style="background:#C9C4B6"></i><i class="sw" style="background:#A9705B"></i><i class="sw" style="background:#8A1538"></i><span style="margin-left:6px;margin-right:10px">R+50</span><i class="sw" style="background:#C9C4B6;border:1px dashed var(--muted)"></i><span>No history</span>` : '';
+    legend.innerHTML = havePartisanData ? `<span style="margin-right:6px">More Democratic</span><i class="sw" style="background:#1F5C6F"></i><i class="sw" style="background:#8E8F8B"></i><i class="sw" style="background:#C9C4B6"></i><i class="sw" style="background:#A9705B"></i><i class="sw" style="background:#8A1538"></i><span style="margin-left:6px;margin-right:10px">More Republican</span><i class="sw" style="background:#C9C4B6;border:1px dashed var(--muted)"></i><span>No history</span>` : '';
     note.textContent = havePartisanData ? "Republican two-party vote share by precinct, from past top-of-ballot election results." : "Waiting on the partisan-lean file to populate this view.";
   }
 }
