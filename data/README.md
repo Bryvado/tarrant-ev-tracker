@@ -22,3 +22,7 @@ private, is never committed (`.gitignore`), and is supplied to the script with `
 
 Launch state (Oct 2026): the page ships with no 2026 early voting data. `test/` holds the Nov 2025 dry run (kept for reference); real days go in `daily/`.
 `registered_voters.json` is the final registration snapshot; `history_base.json` is rebuilt from the current primary-history list (541,412 voters).
+
+Mail ballots sent vs. returned: `mail/abs-YYYY-MM-DD.json` is parsed from the county's "Absentee Voting Totals" PDF by
+`scripts/parse_abs_totals.py` (verifies every row sums to its total and FPCA + Regular = Total). `mail/2022_sent_returned.json` is the
+2022 comparison. Each day's new report replaces the 2026 rows embedded in the page; the roster's mail count should closely match "received".
