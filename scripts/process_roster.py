@@ -14,6 +14,7 @@ Rules (agreed with the project owner):
     checks this and warns if the redacted count ever differs from the rule (a sign the file format or policy changed).
   * Warn if a cumulative count goes DOWN versus the previous day.
 
+Also saves 'primary_split': ballots that are primary voters / non-primary voters / redacted ID (total, in-person, mail, by precinct).
 Optional primary-history step (--history FILE.xlsx, columns VUID, PRECINCT, PE2016..PE2026 with R/D/N): matches early voters to the
 owner's list of voters with primary history by SOS Voter ID (zero-padded to 10 digits) and saves AGGREGATES per precinct:
 [voters, sum of each voter's R share of primary votes, tier counts (Reliable R, Lean R, Even, Lean D, Reliable D)].
@@ -100,13 +101,45 @@ if a.history:
     ids_in = {r['SOS Voter ID'].strip().zfill(10) for r in inp if r['SOS Voter ID'].strip()}
     ids_ml = {r['SOS Voter ID'].strip().zfill(10) for r in mail if r['SOS Voter ID'].strip()}
     pe = hdf.attrs['pe']; E_, B_ = total_agg(early), total_agg(hdf)
-    hist_out = {'history_early': history_agg(early),
+    # Every ballot is one of: primary voter (ID on the list), non-primary voter (visible ID, not on the list), or redacted ID.
+    # Counted by ballot (row), with the roster's precinct, so the shares add up to the day's total.
+    list_ids = set(hdf.VUID)
+    def split(rows):
+        t = [0, 0, 0]
+        for r in rows:
+            v = r['SOS Voter ID'].strip().zfill(10) if r['SOS Voter ID'].strip() else ''
+            t[2 if not v else (0 if v in list_ids else 1)] += 1
+        return t
+    by_p = {}
+    for r in inp + mail:
+        pc = int(r['Precinct'][:4])
+        if pc not in known: continue
+        v = r['SOS Voter ID'].strip().zfill(10) if r['SOS Voter ID'].strip() else ''
+        by_p.setdefault(str(pc), [0, 0, 0])[2 if not v else (0 if v in list_ids else 1)] += 1
+    PS = {'total': split(inp + mail), 'inperson': split(inp), 'mail': split(mail), 'by_precinct': dict(sorted(by_p.items()))}
+    hist_out = {'primary_split': PS, 'history_early': history_agg(early),
                 'history_method': {'base': B_, 'inperson': total_agg(hdf[hdf.VUID.isin(ids_in)]), 'mail': total_agg(hdf[hdf.VUID.isin(ids_ml)])},
                 'history_cross': {'base': cross_groups(hdf, pe), 'early': cross_groups(early, pe)},
                 'history_summary': {'early_r_share': round(E_[1] / E_[0] * 100, 1), 'base_r_share': round(B_[1] / B_[0] * 100, 1),
                                     'divergence_pts': round((E_[1] / E_[0] - B_[1] / B_[0]) * 100, 1), 'early_voters_on_list': E_[0]},
                 'history_coverage': {'early_voters_on_list': int(len(early)), 'roster_rows': len(inp) + len(mail),
                                      'rows_without_visible_id': sum(1 for r in inp + mail if not r['SOS Voter ID'].strip())}}
+    # Primary voters vs. non-primary voters vs. redacted IDs among early voters (non-primary = ID not on the history list)
+    hset = set(hdf.VUID)
+    def split(rows):
+        on = no = red = 0; by = {}
+        for r in rows:
+            i = r['SOS Voter ID'].strip().zfill(10) if r['SOS Voter ID'].strip() else None
+            if i is None: red += 1; k = 1
+            elif i in hset: on += 1; continue
+            else: no += 1; k = 0
+            pc = int(r['Precinct'][:4])
+            if pc in known: by.setdefault(str(pc), [0, 0])[k] += 1
+        return [on, no, red], by
+    s_in, by_in = split(inp); s_ml, by_ml = split(mail); by_all = {}
+    for by in (by_in, by_ml):
+        for k, v in by.items(): by_all.setdefault(k, [0, 0]); by_all[k][0] += v[0]; by_all[k][1] += v[1]
+    hist_out['history_nonprimary'] = {'inperson': s_in, 'mail': s_ml, 'by_precinct': dict(sorted(by_all.items()))}
     if a.history_base_out:
         json.dump(history_agg(hdf, with_sq=True), open(a.history_base_out, 'w'), separators=(',', ':'))
 

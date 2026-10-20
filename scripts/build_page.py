@@ -2,7 +2,7 @@
 """Rebuild the data constants inside index.html from the saved daily files (aggregates only). Run from the repo root:
     python3 scripts/build_page.py
 Reads data/daily/day-NN.json (+ locations-day-NN.json) and the latest data/mail/abs-*.json. Everything else in the page is untouched.
-Updates: DATA2026, TURNOUT_BY_PRECINCT, GEO, HIST_EARLY, HIST_METHOD (early parts), HIST_CROSS (early part), PRECINCT_HISTORY, POLL_VOTES, MAIL26.
+Updates: DATA2026, TURNOUT_BY_PRECINCT, GEO, HIST_EARLY, HIST_METHOD (early parts), HIST_CROSS (early part), PRECINCT_HISTORY, NP_METHOD, NP_BY_PRECINCT, POLL_VOTES, MAIL26.
 """
 import glob, json, re
 from datetime import date
@@ -48,6 +48,8 @@ put('HIST_EARLY', dump(latest.get('history_early', {})))
 hm = get('HIST_METHOD'); lm = latest.get('history_method', {})
 put('HIST_METHOD', dump({'base': hm['base'], 'inperson': lm.get('inperson'), 'mail': lm.get('mail')}))
 hc = get('HIST_CROSS'); put('HIST_CROSS', dump({'base': hc['base'], 'early': latest.get('history_cross', {}).get('early', [0, 0, 0, 0])}))
+npm = latest.get('history_nonprimary')
+if npm: put('NP_METHOD', dump({'inperson': npm['inperson'], 'mail': npm['mail']})); put('NP_BY_PRECINCT', dump(npm['by_precinct']))
 put('PRECINCT_HISTORY', dump([{'day': d['day'], 'label': d['label'], 'p': d['precincts']} for d in days]))
 groups = [("By Commissioner Precinct", "com", "Commissioner Pct"), ("By State Senate District", "sen", "Senate District"), ("By State House District", "hse", "House District"),
           ("By Congressional District", "cong", "Congressional District"), ("By State Board of Education District", "sboe", "SBOE District"), ("By Justice of the Peace Precinct", "jp", "Justice of the Peace Precinct")]
