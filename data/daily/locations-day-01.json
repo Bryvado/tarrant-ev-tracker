@@ -1,0 +1,339 @@
+{
+ "dates": [
+  "10/19"
+ ],
+ "report_total": 50409,
+ "locations": {
+  "1": {
+   "name": "ACTIV",
+   "total": 1618,
+   "by_day": {
+    "10/19": 1618
+   }
+  },
+  "31": {
+   "name": "Asia Times Square",
+   "total": 808,
+   "by_day": {
+    "10/19": 808
+   }
+  },
+  "7": {
+   "name": "Azle ISD PD",
+   "total": 670,
+   "by_day": {
+    "10/19": 670
+   }
+  },
+  "8": {
+   "name": "Bedford Public Library",
+   "total": 1387,
+   "by_day": {
+    "10/19": 1387
+   }
+  },
+  "9": {
+   "name": "Benbrook Community Center",
+   "total": 1233,
+   "by_day": {
+    "10/19": 1233
+   }
+  },
+  "2": {
+   "name": "Bob Duncan Center",
+   "total": 1053,
+   "by_day": {
+    "10/19": 1053
+   }
+  },
+  "35": {
+   "name": "Brookside Center",
+   "total": 1409,
+   "by_day": {
+    "10/19": 1409
+   }
+  },
+  "15": {
+   "name": "Charles F Griffin Building",
+   "total": 593,
+   "by_day": {
+    "10/19": 593
+   }
+  },
+  "16": {
+   "name": "Chisholm Trail Community Center",
+   "total": 810,
+   "by_day": {
+    "10/19": 810
+   }
+  },
+  "3": {
+   "name": "City of Arlington South Service Center",
+   "total": 1308,
+   "by_day": {
+    "10/19": 1308
+   }
+  },
+  "10": {
+   "name": "Colleyville Recreation Center Annex A",
+   "total": 1259,
+   "by_day": {
+    "10/19": 1259
+   }
+  },
+  "17": {
+   "name": "Como Community Center",
+   "total": 1186,
+   "by_day": {
+    "10/19": 1186
+   }
+  },
+  "11": {
+   "name": "Crouch Event Center in Bicentennial Park",
+   "total": 1071,
+   "by_day": {
+    "10/19": 1071
+   }
+  },
+  "18": {
+   "name": "Diamond Hill/Jarvis Branch Library",
+   "total": 533,
+   "by_day": {
+    "10/19": 533
+   }
+  },
+  "19": {
+   "name": "Dionne Phillips Bagsby Southwest Subcourthouse",
+   "total": 1716,
+   "by_day": {
+    "10/19": 1716
+   }
+  },
+  "38": {
+   "name": "Dover Fellowship Hall",
+   "total": 918,
+   "by_day": {
+    "10/19": 918
+   }
+  },
+  "20": {
+   "name": "East Regional Library",
+   "total": 596,
+   "by_day": {
+    "10/19": 596
+   }
+  },
+  "4": {
+   "name": "Elzie Odom Athletic Center",
+   "total": 1393,
+   "by_day": {
+    "10/19": 1393
+   }
+  },
+  "12": {
+   "name": "Euless Family Life Senior Center",
+   "total": 1803,
+   "by_day": {
+    "10/19": 1803
+   }
+  },
+  "14": {
+   "name": "Everman Civic Center",
+   "total": 495,
+   "by_day": {
+    "10/19": 495
+   }
+  },
+  "13": {
+   "name": "Forest Hill Civic & Convention Center",
+   "total": 838,
+   "by_day": {
+    "10/19": 838
+   }
+  },
+  "36": {
+   "name": "Gary Fickes Northeast Courthouse",
+   "total": 1496,
+   "by_day": {
+    "10/19": 1496
+   }
+  },
+  "32": {
+   "name": "Grapevine Public Library",
+   "total": 1655,
+   "by_day": {
+    "10/19": 1655
+   }
+  },
+  "33": {
+   "name": "Haltom City Senior Center",
+   "total": 813,
+   "by_day": {
+    "10/19": 813
+   }
+  },
+  "21": {
+   "name": "Handley-Meadowbrook Community Center",
+   "total": 1282,
+   "by_day": {
+    "10/19": 1282
+   }
+  },
+  "22": {
+   "name": "Hazel Harvey Peace Center for Neighborhoods",
+   "total": 839,
+   "by_day": {
+    "10/19": 839
+   }
+  },
+  "37": {
+   "name": "Keller Town Hall",
+   "total": 1604,
+   "by_day": {
+    "10/19": 1604
+   }
+  },
+  "34": {
+   "name": "Legacy Learning Center Northwest ISD",
+   "total": 990,
+   "by_day": {
+    "10/19": 990
+   }
+  },
+  "42": {
+   "name": "North Richland Hills City Hall",
+   "total": 1217,
+   "by_day": {
+    "10/19": 1217
+   }
+  },
+  "23": {
+   "name": "Northpark YMCA",
+   "total": 1301,
+   "by_day": {
+    "10/19": 1301
+   }
+  },
+  "24": {
+   "name": "Northside Community Center",
+   "total": 493,
+   "by_day": {
+    "10/19": 493
+   }
+  },
+  "43": {
+   "name": "River Oaks Community Center",
+   "total": 665,
+   "by_day": {
+    "10/19": 665
+   }
+  },
+  "44": {
+   "name": "Saginaw Public Library",
+   "total": 949,
+   "by_day": {
+    "10/19": 949
+   }
+  },
+  "39": {
+   "name": "Sheriff's Office North Patrol Division",
+   "total": 1014,
+   "by_day": {
+    "10/19": 1014
+   }
+  },
+  "45": {
+   "name": "Southlake Town Hall",
+   "total": 1752,
+   "by_day": {
+    "10/19": 1752
+   }
+  },
+  "25": {
+   "name": "Southwest Community Center",
+   "total": 843,
+   "by_day": {
+    "10/19": 843
+   }
+  },
+  "26": {
+   "name": "Summerglen Branch Library",
+   "total": 1160,
+   "by_day": {
+    "10/19": 1160
+   }
+  },
+  "27": {
+   "name": "Tarrant County College Northwest Campus",
+   "total": 691,
+   "by_day": {
+    "10/19": 691
+   }
+  },
+  "6": {
+   "name": "Tarrant County College Southeast Campus",
+   "total": 1026,
+   "by_day": {
+    "10/19": 1026
+   }
+  },
+  "28": {
+   "name": "Tarrant County Election Center",
+   "total": 600,
+   "by_day": {
+    "10/19": 600
+   }
+  },
+  "29": {
+   "name": "Tarrant County Plaza Building",
+   "total": 1330,
+   "by_day": {
+    "10/19": 1330
+   }
+  },
+  "40": {
+   "name": "Tarrant County Sub-Courthouse at Mansfield",
+   "total": 1095,
+   "by_day": {
+    "10/19": 1095
+   }
+  },
+  "5": {
+   "name": "Tarrant County SubCourthouse in Arlington",
+   "total": 1463,
+   "by_day": {
+    "10/19": 1463
+   }
+  },
+  "46": {
+   "name": "Town of Westlake Fire-EMS Department",
+   "total": 587,
+   "by_day": {
+    "10/19": 587
+   }
+  },
+  "41": {
+   "name": "Vernon Newsom Stadium",
+   "total": 1280,
+   "by_day": {
+    "10/19": 1280
+   }
+  },
+  "47": {
+   "name": "White Settlement Public Library",
+   "total": 911,
+   "by_day": {
+    "10/19": 911
+   }
+  },
+  "30": {
+   "name": "Worth Heights Community Center",
+   "total": 656,
+   "by_day": {
+    "10/19": 656
+   }
+  }
+ },
+ "unmatched_names": [],
+ "list_locations_without_a_row": []
+}
