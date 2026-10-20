@@ -26,3 +26,7 @@ Launch state (Oct 2026): the page ships with no 2026 early voting data. `test/` 
 Mail ballots sent vs. returned: `mail/abs-YYYY-MM-DD.json` is parsed from the county's "Absentee Voting Totals" PDF by
 `scripts/parse_abs_totals.py` (verifies every row sums to its total and FPCA + Regular = Total). `mail/2022_sent_returned.json` is the
 2022 comparison. Each day's new report replaces the 2026 rows embedded in the page; the roster's mail count should closely match "received".
+
+Primary-history groups (four): Reliable R / Reliable D = 3+ primary votes all in one party; Lean R / Lean D = more votes in one party, with ties
+(equal R and D votes) decided by the most recent primary. The old 'Even' slot (index 2 in the tier arrays) is kept for compatibility but is always 0.
+After a new history list: rerun process_roster.py with --history-base-out, then python3 scripts/build_page.py --refresh-base.

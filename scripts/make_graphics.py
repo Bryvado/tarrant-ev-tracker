@@ -108,9 +108,9 @@ fig.savefig(OUT+'3_sunday_polling_locations_map.png'); plt.close(fig)
 
 # ---------------------------------------------------------------- 4. voter groups bar
 H = 5.8
-tot = METHOD['base'][0]; counts = METHOD['base'][2:]
-names = ["Reliable Republican", "Lean Republican", "Even", "Lean Democratic", "Reliable Democratic"]
-cols = ["#8A1538", "#A9705B", "#C9C4B6", "#6E9FA8", "#1F5C6F"]
+tot = METHOD['base'][0]; counts = [METHOD['base'][k] for k in (2, 3, 5, 6)]   # slot 4 (former Even) is always 0
+names = ["Reliable Republican", "Lean Republican", "Lean Democratic", "Reliable Democratic"]
+cols = ["#8A1538", "#A9705B", "#6E9FA8", "#1F5C6F"]
 fig = new_fig(H, "Who's on the primary-history list", f"{tot:,} Tarrant County voters who voted in at least one primary from 2016 to 2026")
 ax = axes_in(fig, H, 2.4, 2.4, 4.2, 2.05)
 y = np.arange(len(counts))[::-1]
@@ -120,7 +120,7 @@ ax.set_yticks(y); ax.set_yticklabels(names, fontsize=10.5, color=INK); ax.set_xl
 ax.tick_params(length=0); ax.set_xticks([])
 for sp in ax.spines.values(): sp.set_visible(False)
 for i, t in enumerate(["Reliable: three or more primary votes, all in one party.",
-                       "Lean: more primary votes in one party than the other.  Even: the same number in each party.",
+                       "Lean: more primary votes in one party; ties go by the most recent primary.",
                        "This is a record of past primary choices, not how anyone votes in November."]):
     fig.text(0.35/W, (1.98-0.27*i)/H, t, fontsize=8.5, color=MUTED, va='center')
 footer(fig, H, 'Source: Tarrant County voter primary history, 2016\u20132026 (totals only)')

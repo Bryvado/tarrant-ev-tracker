@@ -15,7 +15,7 @@ reg = sum(REG.get(p, 0) for p in ids); county_reg = sum(REG.values())
 B = [sum((HB.get(str(p)) or [0] * 8)[i] for p in ids) for i in range(7)]
 m = lambda x: (2 * x - 1) * 100
 rl = sum(REG[p] * LEAN[p] for p in ids if p in LEAN and REG.get(p)); rr = sum(REG[p] for p in ids if p in LEAN and REG.get(p))
-tiers = ['Reliable R', 'Lean R', 'Even', 'Lean D', 'Reliable D']
+tiers = [('Reliable R', 0), ('Lean R', 1), ('Lean D', 3), ('Reliable D', 4)]   # data slot 2 (former Even) is always 0
 print(f"{a.name}: {len(ids)} precincts | {reg:,} registered ({reg/county_reg*100:.0f}% of county) | baseline lean R{m(rl/rr):+.1f} | list voters {B[0]:,} (R share {B[1]/B[0]*100:.1f}%)\n")
 print("day | date    | early votes | share of county | turnout | early-vote lean | tilt   | early R primary hist (vs base) | Rel.D vs Rel.R voted")
 for d in days:
@@ -29,4 +29,4 @@ for d in days:
 d = days[-1]; he = d.get('history_early', {}); E = [sum((he.get(str(p)) or [0] * 7)[i] for p in ids) for i in range(7)]
 if E[0]:
     print("\nLatest day, by primary-history group (share of that group's list voters who have voted early | share of SD's early voters | share of SD's list):")
-    for i, t in enumerate(tiers): print(f"  {t:<11} {E[2+i]/B[2+i]*100:5.1f}% | {E[2+i]/E[0]*100:4.0f}% | {B[2+i]/B[0]*100:4.0f}%")
+    for t, k in tiers: print(f"  {t:<11} {E[2+k]/B[2+k]*100:5.1f}% | {E[2+k]/E[0]*100:4.0f}% | {B[2+k]/B[0]*100:4.0f}%")

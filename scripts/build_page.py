@@ -45,8 +45,12 @@ html = re.sub(r'const DATA2026 = \[.*?\n\];', 'const DATA2026 = [\n' + ',\n'.joi
 # --- per-precinct turnout, history, geography
 put('TURNOUT_BY_PRECINCT', dump({int(k): v for k, v in latest['precincts'].items()}))
 put('HIST_EARLY', dump(latest.get('history_early', {})))
-hm = get('HIST_METHOD'); lm = latest.get('history_method', {})
-put('HIST_METHOD', dump({'base': hm['base'], 'inperson': lm.get('inperson'), 'mail': lm.get('mail')}))
+import sys
+hm = get('HIST_METHOD'); lm = latest.get('history_method', {}); base_tot = hm['base']
+if '--refresh-base' in sys.argv:   # after a new/changed primary-history list: python3 scripts/build_page.py --refresh-base
+    hb = {k: v for k, v in json.load(open('data/history_base.json')).items() if int(k) in meta}
+    put('HIST_BASE', dump(hb)); base_tot = [sum(v[0] for v in hb.values()), round(sum(v[1] for v in hb.values()), 3)] + [sum(v[2 + i] for v in hb.values()) for i in range(5)]
+put('HIST_METHOD', dump({'base': base_tot, 'inperson': lm.get('inperson'), 'mail': lm.get('mail')}))
 hc = get('HIST_CROSS'); put('HIST_CROSS', dump({'base': hc['base'], 'early': latest.get('history_cross', {}).get('early', [0, 0, 0, 0])}))
 npm = latest.get('history_nonprimary')
 if npm: put('NP_METHOD', dump({'inperson': npm['inperson'], 'mail': npm['mail']})); put('NP_BY_PRECINCT', dump(npm['by_precinct']))

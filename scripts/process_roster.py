@@ -18,7 +18,8 @@ Also saves 'primary_split': ballots that are primary voters / non-primary voters
 Optional primary-history step (--history FILE.xlsx, columns VUID, PRECINCT, PE2016..PE2026 with R/D/N): matches early voters to the
 owner's list of voters with primary history by SOS Voter ID (zero-padded to 10 digits) and saves AGGREGATES per precinct:
 [voters, sum of each voter's R share of primary votes, tier counts (Reliable R, Lean R, Even, Lean D, Reliable D)].
-Tiers: Reliable = 3+ primary votes all in one party; Lean = more votes in one party; Even = equal. The list itself is private and
+Tiers: Reliable = 3+ primary votes all in one party; Lean = more votes in one party. Voters with equal R and D votes (formerly 'Even')
+are placed in Lean R or Lean D by their most recent primary, so the Even slot (index 2) is always 0. The list itself is private and
 must never be committed; --history-base-out writes the all-voters aggregate (same format, plus sum of squared shares).
 
 usage: process_roster.py --label "Day 3" --day 3 --date 2026-10-21 --inperson FILE --mail FILE \
@@ -61,8 +62,8 @@ red_check = {k: (sum(map(redacted, rs)) == expected_redactions(rs)) for k, rs in
 for k, ok in red_check.items():
     if not ok: print(f"WARNING: {k} redacted-row count does not match the 1-2 vote rule; check the file")
 
-def tier(r, d):
-    if r == d: return 2
+def tier(r, d, recent):
+    if r == d: return 1 if recent == 'R' else 3   # tie: decided by the most recent primary
     if r > d: return 0 if (d == 0 and r >= 3) else 1
     return 4 if (r == 0 and d >= 3) else 3
 def history_frame(path):
@@ -71,7 +72,8 @@ def history_frame(path):
     df['VUID'] = df.VUID.str.zfill(10)
     pe = [c for c in df.columns if c.startswith('PE')]
     df['R'] = (df[pe] == 'R').sum(axis=1); df['D'] = (df[pe] == 'D').sum(axis=1)
-    df['share'] = df.R / (df.R + df.D); df['tier'] = [tier(r, d) for r, d in zip(df.R, df.D)]
+    df['share'] = df.R / (df.R + df.D); recent = df[sorted(pe, reverse=True)].apply(lambda row: next((v for v in row if v in ('R', 'D')), None), axis=1)
+    df['tier'] = [tier(r, d, rc) for r, d, rc in zip(df.R, df.D, recent)]
     df['p'] = df.PRECINCT.astype(int); df['sq'] = df.share ** 2
     df.attrs['pe'] = pe
     return df
