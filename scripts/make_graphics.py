@@ -33,6 +33,7 @@ def footer(fig, h, source):
     ax = fig.add_axes([0.35/W, 0.10/h, 1.0/W, 0.27/h]); ax.imshow(LOGO); ax.axis('off')
     fig.text(1.5/W, 0.235/h, 'Tarrant County Early Voting Tracker', fontsize=9.5, color=INK, va='center', fontweight='bold')
     fig.text(0.35/W, 0.62/h, source, fontsize=7.5, color=MUTED, va='center', ha='left')
+    fig.text((W-0.35)/W, 0.235/h, 'cesdatatx.com', fontsize=10.5, color=INK, va='center', ha='right', fontweight='bold')
 def axes_in(fig, h, l, b, w, hh): return fig.add_axes([l/W, b/h, w/W, hh/h])
 def lean_color(r):
     t = max(-1, min(1, (r-0.5)*2))

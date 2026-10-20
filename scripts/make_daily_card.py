@@ -71,6 +71,7 @@ ax.set_xlabel('Day of early voting', fontsize=9, color=INK, labelpad=4)
 
 lg = fig.add_axes([0.35/W, 0.10/H, 1.0/W, 0.27/H]); lg.imshow(Image.open('assets/logo.png').convert('RGBA')); lg.axis('off')
 fig.text(1.5/W, 0.235/H, 'Tarrant County Early Voting Tracker', fontsize=9.5, color=INK, va='center', fontweight='bold')
+fig.text((W-0.35)/W, 0.235/H, 'cesdatatx.com', fontsize=10.5, color=INK, va='center', ha='right', fontweight='bold')
 note = f"Totals through {t.strftime('%b')} {t.day}. Mail includes ballots returned before early voting opened. Source: Tarrant County Elections."
 fig.text(0.35/W, 0.62/H, note, fontsize=7.2, color=MUTED, va='center')
 os.makedirs(a.out, exist_ok=True)
