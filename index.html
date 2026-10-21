@@ -429,12 +429,14 @@ function renderHistory(){
     return;
   }
   const all = histDiv(()=>true), E = all.E, B = all.B, d = all.d;
+  // Plain split among voters with a primary history: Democratic-leaning (Lean D + Reliable D) vs. Republican-leaning (Lean R + Reliable R)
+  const dShare = (a) => Math.round((a[5] + a[6]) / (a[2] + a[3] + a[5] + a[6]) * 100), dp = dShare(E), db = dShare(B);
   const last = DATA2026[DATA2026.length-1], tot = last ? (last.mail_cumulative||0) + (last.inperson_cumulative||0) : 0;
   let s;
   if(Math.abs(d) < 1) s = "Looking at individual voters, early voters so far have about the same primary history as the county's primary voters as a whole.";
   else s = `Looking at individual voters, early voters so far have a ${Math.abs(d) < 3 ? "slightly more" : "more"} ${d>0 ? "Republican" : "Democratic"} primary history than the county's primary voters as a whole.`;
   note.style.display = '';
-  note.innerHTML = `<b>${s}</b> Their past primary votes were ${(all.e*100).toFixed(1)}% Republican, vs. ${(all.b*100).toFixed(1)}% for all ${B[0].toLocaleString()} voters on the history list (${divTxt(d)}).<small>Based on ${E[0].toLocaleString()} early voters${tot ? " (" + (E[0]/tot*100).toFixed(0) + "% of early voters)" : ""} who appear on the primary-history list. Voters with no primary history or a redacted ID are not included. Primary history shows past primary choices, not how anyone votes in November.</small>`;
+  note.innerHTML = `<b>${s}</b> In plain terms, ${dp}% of early voters with a primary history have mostly voted in Democratic primaries and ${100-dp}% in Republican ones, compared with ${db}% and ${100-db}% for all primary voters. Their average share of past primary votes cast in the Republican primary was ${(all.e*100).toFixed(1)}%, vs. ${(all.b*100).toFixed(1)}% for all ${B[0].toLocaleString()} voters on the history list (${divTxt(d)}).<small>Based on ${E[0].toLocaleString()} early voters${tot ? " (" + (E[0]/tot*100).toFixed(0) + "% of early voters)" : ""} who appear on the primary-history list. Voters with no primary history or a redacted ID are not included. Primary history shows past primary choices, not how anyone votes in November.</small>`;
 
   const rows = HIST_TIERS.map((label,i)=>{ const k = 2+TIER_SLOT[i]; return {label, v:E[k], n:B[k], rate: B[k] ? E[k]/B[k] : 0}; });
   const mx = Math.max(...rows.map(r=>r.rate), 0.0001);

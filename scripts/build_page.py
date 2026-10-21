@@ -78,5 +78,10 @@ if abs_files:
     rows_ = [[d, g(S, 'Total', d), g(R, 'Total', d), g(S, 'FPCA', d), g(R, 'FPCA', d)] for d in ds]
     stamp = a['report_asof']; asof = f"{MONTH(stamp[:10])}, {stamp[11:]}"
     put('MAIL26', f'{{asof:"{asof}", election:"2026-11-03", days:{dump(rows_)}}}')
+lm2 = latest.get('history_method', {})
+if lm2.get('inperson') and lm2.get('mail'):
+    e = [a + b for a, b in zip(lm2['inperson'], lm2['mail'])]; b0 = get('HIST_METHOD')['base']
+    dsh = lambda a: (a[5] + a[6]) / (a[2] + a[3] + a[5] + a[6]) * 100
+    print(f"plain split (primary voters): early {dsh(e):.0f}% D-leaning / {100 - dsh(e):.0f}% R-leaning vs all list voters {dsh(b0):.0f}% / {100 - dsh(b0):.0f}% | early voters on list {sum(e[2:7]):,}")
 open(PAGE, 'w').write(html)
 print(f"built from {len(days)} day(s); latest {latest['label']} | in-person {latest['in_person_cumulative']:,} | mail {latest['mail_cumulative']:,} | tilt {entries[-1]['tilt']:+} | mail report {abs_files[-1] if abs_files else 'none'}")

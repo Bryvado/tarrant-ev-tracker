@@ -1,8 +1,8 @@
 # Post templates (Substack)
 
 Daily (Tue/Wed/Thu/Sat/Sun): title with the day's total and % of registered; today's numbers (in-person, mail returned to date, total) with
-the 2022 same-day comparison; mail return rate vs. the same point in 2022; busiest/quietest locations; who's showing up (precinct-lean tilt AND
-primary-history gap, with the caveat); days remaining. Attach the daily card (scripts/make_daily_card.py). Link: cesdatatx.com.
+the 2022 same-day comparison; mail return rate vs. the same point in 2022; busiest/quietest locations; who's showing up -- lead with the PLAIN SPLIT (scripts/build_page.py prints it: e.g. '58% D-leaning / 42% R-leaning among early voters with a
+primary history vs. 49/51 for all primary voters'), then precinct-lean tilt, then the caveat; days remaining. Attach the daily card (scripts/make_daily_card.py). Link: cesdatatx.com.
 
 Friday and the final weekend: everything above plus --
 1. By district: commissioner precinct, Senate, House top lines with turnout %, lean and tilt (from the site's Geographic Breakdown).
