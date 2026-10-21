@@ -54,9 +54,11 @@ put('HIST_METHOD', dump({'base': base_tot, 'inperson': lm.get('inperson'), 'mail
 hc = get('HIST_CROSS'); put('HIST_CROSS', dump({'base': hc['base'], 'early': latest.get('history_cross', {}).get('early', [0, 0, 0, 0])}))
 npm = latest.get('history_nonprimary')
 if npm: put('NP_METHOD', dump({'inperson': npm['inperson'], 'mail': npm['mail']})); put('NP_BY_PRECINCT', dump(npm['by_precinct']))
-def _cat(d):   # cumulative early voters by primary history: Democratic-leaning, Republican-leaning, no primary history (incl. redacted IDs)
-    hm = d['history_method']; e = [a + b for a, b in zip(hm['inperson'], hm['mail'])]; n = d['history_nonprimary']
-    return {'day': d['day'], 'label': MONTH(d['snapshot_date']), 'd': e[5] + e[6], 'r': e[2] + e[3], 'n': n['inperson'][1] + n['mail'][1] + n['inperson'][2] + n['mail'][2]}
+def _cat(d):   # per day, cumulative early voters by primary history as [Democratic-leaning, Republican-leaning, no primary history (incl. redacted IDs)]
+    hm = d['history_method']; n = d['history_nonprimary']
+    one = lambda m: [hm[m][5] + hm[m][6], hm[m][2] + hm[m][3], n[m][1] + n[m][2]]
+    i, m = one('inperson'), one('mail')
+    return {'day': d['day'], 'label': MONTH(d['snapshot_date']), 't': [x + y for x, y in zip(i, m)], 'i': i, 'm': m}
 if all('history_nonprimary' in d and d.get('history_method', {}).get('inperson') for d in days): put('CATEGORY_BY_DAY', dump([_cat(d) for d in days]))
 put('PRECINCT_HISTORY', dump([{'day': d['day'], 'label': d['label'], 'p': d['precincts']} for d in days]))
 groups = [("By Commissioner Precinct", "com", "Commissioner Pct"), ("By State Senate District", "sen", "Senate District"), ("By State House District", "hse", "House District"),

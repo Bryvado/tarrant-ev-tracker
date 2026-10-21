@@ -9,15 +9,15 @@ import matplotlib; matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from PIL import Image
 
-ap = argparse.ArgumentParser(); ap.add_argument('--out', default='out/'); a = ap.parse_args()
+ap = argparse.ArgumentParser(); ap.add_argument('--out', default='out/'); ap.add_argument('--method', choices=['total', 'inperson', 'mail'], default='total'); a = ap.parse_args()
 INK, MUTED, LINE = '#3A332F', '#6B6558', '#D9D4C7'; COL = ('#1F5C6F', '#8A1538', '#F0AC42')
 plt.rcParams['font.family'] = 'DejaVu Sans'
 days = [json.load(open(f)) for f in sorted(glob.glob('data/daily/day-*.json'))]
 cum = []
 for d in days:
-    hm = d['history_method']; e = [x + y for x, y in zip(hm['inperson'], hm['mail'])]; n = d['history_nonprimary']
-    red = n['inperson'][2] + n['mail'][2]
-    cum.append((e[5] + e[6], e[2] + e[3], n['inperson'][1] + n['mail'][1] + red, red))
+    hm = d['history_method']; n = d['history_nonprimary']; ms = ['inperson', 'mail'] if a.method == 'total' else [a.method]
+    e = [sum(hm[m][i] for m in ms) for i in range(7)]; red = sum(n[m][2] for m in ms)
+    cum.append((e[5] + e[6], e[2] + e[3], sum(n[m][1] for m in ms) + red, red))
 daily = [tuple(max(0, c - p) for c, p in zip(cum[i][:3], cum[i-1][:3] if i else (0, 0, 0))) for i in range(len(cum))]
 last = days[-1]; t = date.fromisoformat(last['snapshot_date']); tot = sum(cum[-1][:3])
 share = [v / tot * 100 for v in cum[-1][:3]]
@@ -52,5 +52,5 @@ for i, line in enumerate(["Democratic-leaning = mostly voted in Democratic prima
 lg = fig.add_axes([0.35/W, 0.10/H, 1.0/W, 0.27/H]); lg.imshow(Image.open('assets/logo.png').convert('RGBA')); lg.axis('off')
 fig.text(1.5/W, 0.235/H, 'Tarrant County Early Voting Tracker', fontsize=9.5, color=INK, va='center', fontweight='bold')
 fig.text((W-0.35)/W, 0.235/H, 'cesdatatx.com', fontsize=10.5, color=INK, va='center', ha='right', fontweight='bold')
-os.makedirs(a.out, exist_ok=True); path = os.path.join(a.out, f"voters_by_day_day-{last['day']:02d}_{last['snapshot_date']}.png"); fig.savefig(path)
+os.makedirs(a.out, exist_ok=True); path = os.path.join(a.out, f"voters_by_day{'' if a.method == 'total' else '_' + a.method}_day-{last['day']:02d}_{last['snapshot_date']}.png"); fig.savefig(path)
 print(path, "| shares so far:", [f"{s:.1f}%" for s in share])
