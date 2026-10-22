@@ -24,8 +24,10 @@ share = [v / tot * 100 for v in cum[-1][:3]]
 
 W, H = 7.28, 7.0
 fig = plt.figure(figsize=(W, H), dpi=200); fig.patch.set_facecolor('white')
-fig.text(0.35/W, 1-0.50/H, "Who's voting, day by day", fontsize=21, fontweight='bold', color=INK, va='top')
-fig.text(0.35/W, 1-0.98/H, f"Early voters each day by primary history  \u00b7  through {t.strftime('%b')} {t.day}", fontsize=11, color=MUTED, va='top')
+TITLE = {'total': "Who's voting, day by day", 'inperson': "Who's voting in person, day by day", 'mail': "Who's returning mail ballots, by day"}[a.method]
+WHO = {'total': 'Early voters', 'inperson': 'In-person early voters', 'mail': 'Mail ballots returned'}[a.method]
+fig.text(0.35/W, 1-0.50/H, TITLE, fontsize=21, fontweight='bold', color=INK, va='top')
+fig.text(0.35/W, 1-0.98/H, f"{WHO} each day by primary history  \u00b7  through {t.strftime('%b')} {t.day}", fontsize=11, color=MUTED, va='top')
 ax = fig.add_axes([0.95/W, 2.3/H, 5.95/W, 3.05/H])
 labels = ['Democratic-leaning', 'Republican-leaning', 'No primary history']
 for i, (dd, day) in enumerate(zip(daily, days)):
@@ -46,8 +48,10 @@ ax.set_xlabel('Day of early voting', fontsize=9.5, color=INK, labelpad=5)
 fig.legend(loc='upper left', bbox_to_anchor=(0.35/W, 1-1.28/H), ncol=3, frameon=False, fontsize=9, handlelength=1.1, columnspacing=1.6)
 fig.text(0.35/W, 1.68/H, f"So far:  {share[0]:.0f}% Democratic-leaning  \u00b7  {share[1]:.0f}% Republican-leaning  \u00b7  {share[2]:.0f}% no primary history", fontsize=9, fontweight='bold', color=INK, va='center')
 for i, line in enumerate(["Democratic-leaning = mostly voted in Democratic primaries since 2016; Republican-leaning likewise.",
-                          "Day 1 includes mail ballots returned before early voting opened. No primary history includes the",
-                          f"{cum[-1][3] / tot * 100:.1f}% of early voters whose IDs are redacted. Past primary choices, not how anyone votes in November."]):
+                          {"total": "Day 1 includes mail ballots returned before early voting opened. No primary history includes the",
+                           "inperson": "In-person early voters only; mail ballots are not included. No primary history includes the",
+                           "mail": "Mail ballots only: Day 1 is every ballot returned through Oct 19; later days are the net change. No primary history"}[a.method],
+                          f"{'' if a.method != 'mail' else 'includes '}{cum[-1][3] / tot * 100:.1f}% of {'early voters' if a.method != 'mail' else 'ballots'} whose IDs are redacted. Past primary choices, not how anyone votes in November."]):
     fig.text(0.35/W, (1.34 - 0.2 * i)/H, line, fontsize=7.2, color=MUTED, va='center')
 lg = fig.add_axes([0.35/W, 0.10/H, 1.0/W, 0.27/H]); lg.imshow(Image.open('assets/logo.png').convert('RGBA')); lg.axis('off')
 fig.text(1.5/W, 0.235/H, 'Tarrant County Early Voting Tracker', fontsize=9.5, color=INK, va='center', fontweight='bold')
