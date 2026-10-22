@@ -132,6 +132,14 @@ footer{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.75rem; c
   </section>
 
   <section>
+    <h2>Where voters with no primary history live</h2>
+    <div class="tiltnote" id="npLeanNote" style="display:none; margin-top:0"></div>
+    <div class="tablewrap" id="npLeanTable"></div>
+    <div class="tablewrap" id="npTierTable" style="margin-top:14px"></div>
+    <div id="npTrend"></div>
+  </section>
+
+  <section>
     <h2>Turnout by voter primary history</h2>
     <div class="maptools" id="histTierTools"></div>
     <div id="histTierChart"></div>
@@ -320,6 +328,7 @@ function main(){
   renderMail();
   renderNonPrimary();
   renderCategoryDays();
+  renderNoPrimary();
 }
 
 const COM_COLORS = {"1":"#F0AC42","2":"#504846","3":"#C98A2E","4":"#8C8279"};
@@ -363,6 +372,8 @@ const NP_METHOD = {"inperson":[119005,31270,79],"mail":[11081,2481,208]};
 const NP_BY_PRECINCT = {"1005":[13,4],"1006":[47,0],"1008":[9,2],"1010":[19,0],"1011":[20,0],"1012":[45,0],"1013":[67,0],"1019":[36,0],"1025":[71,3],"1030":[84,0],"1031":[68,0],"1056":[6,0],"1059":[22,3],"1060":[67,0],"1062":[2,0],"1066":[27,1],"1074":[18,0],"1075":[30,0],"1077":[5,0],"1078":[28,0],"1079":[25,2],"1080":[28,0],"1082":[20,0],"1083":[17,2],"1088":[40,0],"1089":[19,0],"1090":[41,0],"1096":[33,0],"1097":[23,1],"1098":[43,0],"1099":[22,2],"1104":[39,0],"1106":[33,0],"1107":[37,2],"1109":[44,0],"1119":[80,0],"1126":[42,0],"1127":[29,0],"1132":[33,0],"1146":[78,0],"1148":[51,0],"1149":[47,0],"1150":[31,0],"1151":[35,0],"1153":[44,0],"1154":[10,0],"1158":[49,0],"1170":[80,0],"1180":[42,0],"1186":[82,0],"1188":[9,0],"1195":[42,0],"1201":[43,0],"1207":[65,2],"1211":[47,0],"1224":[53,0],"1225":[45,0],"1227":[38,0],"1233":[55,0],"1236":[11,0],"1238":[70,0],"1251":[81,1],"1255":[77,3],"1256":[17,0],"1257":[48,0],"1265":[35,0],"1274":[0,1],"1275":[28,0],"1277":[28,0],"1278":[40,0],"1279":[40,0],"1288":[8,1],"1291":[27,0],"1292":[26,0],"1293":[43,0],"1295":[47,0],"1297":[33,0],"1299":[50,0],"1300":[60,0],"1301":[63,0],"1302":[41,0],"1311":[44,0],"1312":[2,1],"1315":[47,0],"1329":[14,0],"1341":[12,0],"1346":[38,0],"1347":[90,0],"1349":[35,0],"1378":[92,1],"1379":[126,0],"1380":[33,0],"1381":[13,1],"1382":[57,0],"1383":[45,1],"1404":[56,2],"1405":[40,0],"1407":[2,1],"1411":[19,2],"1413":[20,0],"1414":[2,0],"1415":[43,1],"1428":[18,2],"1436":[41,0],"1437":[13,0],"1438":[77,0],"1439":[19,1],"1440":[58,0],"1441":[11,0],"1444":[2,0],"1453":[77,0],"1459":[50,0],"1460":[62,0],"1461":[50,0],"1462":[42,0],"1463":[39,0],"1466":[39,0],"1467":[41,0],"1473":[15,0],"1475":[1,1],"1476":[0,1],"1477":[37,2],"1479":[12,1],"1481":[19,1],"1482":[22,0],"1483":[4,0],"1484":[53,0],"1488":[47,1],"1489":[62,0],"1490":[10,0],"1491":[0,1],"1495":[5,0],"1518":[18,2],"1519":[0,1],"1525":[57,0],"1537":[40,0],"1541":[60,0],"1543":[21,0],"1546":[3,0],"1550":[1,0],"1557":[38,0],"1559":[2,0],"1576":[6,2],"1577":[31,0],"1578":[55,2],"1589":[14,1],"1597":[15,0],"1608":[18,0],"1610":[0,2],"1613":[61,0],"1616":[2,2],"1617":[2,0],"1619":[2,0],"1621":[8,0],"1631":[3,0],"1635":[63,1],"1639":[51,2],"1641":[90,0],"1642":[67,1],"1644":[114,0],"1652":[4,0],"1655":[17,0],"1657":[0,2],"1677":[16,0],"1699":[124,0],"1714":[109,0],"1715":[36,0],"1718":[17,0],"1722":[13,0],"1723":[39,1],"1731":[61,0],"1734":[116,0],"1738":[1,0],"1739":[0,3],"1831":[141,2],"1838":[50,0],"1840":[58,0],"1848":[72,0],"1855":[7,1],"1856":[8,2],"1857":[111,0],"1858":[6,2],"1859":[3,1],"1860":[0,2],"2003":[23,0],"2004":[62,0],"2007":[47,0],"2009":[32,1],"2014":[14,0],"2021":[67,0],"2022":[27,0],"2023":[89,0],"2024":[46,0],"2026":[55,0],"2027":[12,2],"2028":[39,0],"2029":[65,0],"2033":[83,0],"2034":[69,1],"2052":[100,0],"2055":[58,0],"2058":[2,0],"2070":[60,0],"2071":[50,0],"2085":[18,0],"2100":[13,0],"2103":[76,4],"2105":[36,0],"2111":[126,0],"2112":[66,0],"2129":[28,0],"2133":[62,0],"2134":[37,0],"2135":[12,0],"2136":[54,0],"2142":[37,0],"2145":[53,0],"2147":[33,0],"2155":[64,1],"2161":[101,0],"2165":[7,1],"2167":[53,0],"2168":[20,0],"2169":[26,0],"2171":[57,0],"2173":[19,0],"2174":[61,0],"2179":[40,0],"2181":[77,0],"2184":[33,0],"2189":[54,0],"2190":[32,0],"2205":[70,0],"2206":[71,0],"2208":[53,0],"2210":[36,0],"2217":[60,0],"2219":[49,0],"2220":[60,0],"2221":[41,0],"2223":[43,0],"2226":[51,0],"2228":[64,0],"2229":[57,0],"2230":[72,0],"2235":[111,0],"2237":[26,0],"2244":[10,5],"2246":[30,0],"2258":[22,0],"2262":[28,6],"2263":[64,0],"2264":[45,0],"2266":[73,0],"2267":[53,0],"2268":[51,0],"2269":[8,0],"2270":[17,0],"2271":[67,0],"2273":[55,0],"2280":[37,0],"2281":[35,0],"2294":[85,0],"2296":[77,0],"2303":[70,0],"2304":[45,0],"2305":[58,2],"2306":[35,0],"2307":[111,0],"2308":[118,0],"2309":[60,0],"2310":[31,0],"2313":[48,0],"2314":[68,0],"2317":[35,0],"2318":[59,0],"2319":[70,0],"2320":[57,0],"2337":[56,0],"2339":[50,2],"2342":[52,0],"2345":[31,0],"2348":[36,5],"2352":[19,0],"2353":[35,0],"2354":[38,0],"2355":[61,0],"2356":[49,0],"2357":[82,0],"2358":[61,0],"2360":[114,0],"2377":[88,1],"2393":[6,0],"2401":[8,0],"2403":[0,1],"2423":[72,0],"2425":[91,0],"2426":[74,0],"2431":[57,1],"2435":[92,0],"2445":[2,0],"2448":[84,0],"2449":[44,0],"2450":[80,0],"2451":[2,0],"2456":[25,0],"2464":[10,0],"2468":[76,0],"2474":[14,5],"2501":[14,0],"2504":[57,0],"2505":[24,0],"2506":[82,0],"2515":[0,2],"2520":[47,0],"2521":[47,0],"2522":[106,0],"2523":[78,0],"2524":[55,0],"2535":[114,0],"2548":[34,0],"2553":[27,0],"2555":[1,1],"2556":[50,0],"2569":[3,0],"2581":[55,0],"2614":[16,0],"2627":[13,2],"2636":[86,0],"2645":[57,0],"2656":[0,2],"2658":[10,0],"2659":[1,0],"2660":[10,0],"2670":[0,1],"2697":[88,0],"2704":[66,0],"2708":[100,0],"2710":[75,0],"2712":[59,0],"2717":[86,1],"2719":[64,0],"2721":[84,0],"2726":[63,2],"2727":[16,0],"2741":[5,1],"2742":[16,0],"2743":[0,1],"2744":[11,0],"2745":[7,0],"2746":[34,0],"2834":[46,3],"2835":[47,0],"2837":[65,1],"2843":[78,0],"2861":[2,0],"2862":[0,2],"2863":[10,1],"2864":[33,0],"2865":[1,0],"3032":[52,1],"3035":[112,0],"3036":[66,0],"3037":[80,0],"3038":[80,0],"3039":[64,0],"3040":[85,0],"3041":[111,1],"3049":[78,0],"3054":[104,0],"3063":[54,0],"3072":[53,0],"3114":[95,0],"3131":[41,0],"3139":[45,0],"3140":[43,0],"3156":[54,0],"3157":[67,0],"3160":[142,0],"3164":[56,0],"3166":[66,0],"3172":[91,0],"3175":[73,0],"3176":[112,0],"3177":[80,0],"3183":[121,0],"3187":[29,0],"3193":[99,1],"3194":[59,0],"3196":[43,0],"3197":[79,0],"3199":[10,2],"3200":[71,0],"3209":[76,1],"3212":[71,2],"3213":[72,0],"3214":[73,0],"3215":[59,2],"3216":[124,0],"3240":[126,1],"3247":[36,0],"3248":[142,2],"3249":[110,0],"3254":[60,0],"3260":[39,0],"3282":[56,0],"3283":[40,0],"3286":[56,3],"3287":[68,0],"3289":[76,2],"3316":[54,0],"3321":[90,0],"3322":[53,0],"3323":[114,0],"3324":[66,0],"3325":[38,0],"3326":[49,0],"3327":[37,0],"3330":[28,0],"3331":[110,0],"3332":[84,1],"3333":[107,0],"3334":[53,0],"3335":[70,0],"3336":[110,0],"3359":[81,0],"3361":[98,0],"3364":[57,0],"3365":[115,0],"3367":[44,0],"3368":[23,0],"3372":[90,2],"3384":[51,0],"3385":[85,0],"3386":[52,0],"3387":[46,0],"3388":[83,0],"3389":[129,0],"3390":[147,2],"3391":[69,0],"3392":[61,0],"3396":[104,0],"3398":[35,0],"3409":[0,2],"3417":[67,3],"3421":[61,0],"3422":[62,0],"3433":[25,0],"3442":[133,0],"3443":[71,0],"3465":[125,2],"3469":[36,0],"3470":[8,0],"3471":[32,0],"3486":[111,0],"3500":[143,0],"3502":[60,0],"3507":[72,0],"3509":[46,0],"3510":[95,0],"3511":[82,0],"3516":[63,0],"3517":[56,0],"3526":[63,0],"3527":[82,0],"3530":[75,0],"3536":[55,0],"3538":[176,1],"3539":[0,2],"3542":[63,0],"3545":[98,1],"3552":[97,0],"3554":[78,0],"3558":[129,0],"3562":[9,0],"3574":[19,2],"3579":[36,0],"3582":[2,0],"3588":[100,0],"3624":[17,2],"3626":[22,0],"3637":[82,2],"3646":[109,0],"3647":[122,1],"3648":[111,2],"3665":[0,2],"3667":[6,1],"3668":[15,2],"3671":[22,0],"3695":[77,0],"3696":[92,0],"3698":[82,0],"3701":[54,0],"3706":[94,0],"3709":[49,0],"3716":[55,0],"3720":[62,2],"3725":[70,0],"3728":[105,0],"3729":[28,2],"3735":[54,0],"3839":[81,0],"3842":[55,0],"3845":[45,0],"3851":[50,0],"3854":[5,0],"3867":[0,2],"4001":[67,0],"4015":[26,0],"4016":[38,0],"4017":[84,0],"4018":[23,0],"4020":[52,0],"4042":[41,0],"4043":[68,0],"4044":[85,2],"4045":[72,0],"4046":[73,0],"4047":[123,2],"4048":[20,0],"4050":[45,0],"4053":[43,3],"4057":[10,0],"4061":[8,6],"4065":[84,3],"4067":[37,0],"4068":[55,0],"4069":[50,0],"4073":[17,0],"4076":[29,0],"4081":[9,0],"4086":[67,0],"4087":[14,1],"4091":[96,1],"4092":[42,0],"4093":[70,0],"4094":[43,0],"4095":[7,0],"4101":[42,0],"4102":[33,1],"4108":[34,0],"4110":[30,0],"4113":[10,1],"4115":[8,0],"4116":[61,0],"4117":[35,0],"4118":[26,0],"4120":[52,0],"4121":[68,0],"4122":[51,2],"4123":[59,0],"4124":[35,0],"4125":[24,0],"4128":[86,0],"4130":[50,0],"4137":[42,0],"4138":[24,1],"4141":[44,2],"4144":[42,0],"4152":[1,2],"4159":[69,0],"4162":[23,0],"4163":[23,0],"4178":[60,0],"4182":[61,0],"4191":[26,0],"4192":[98,5],"4202":[61,0],"4203":[58,1],"4204":[80,0],"4218":[32,0],"4222":[30,0],"4231":[56,0],"4232":[60,0],"4234":[71,0],"4239":[4,0],"4242":[20,0],"4243":[97,0],"4245":[8,0],"4250":[57,2],"4252":[34,0],"4253":[40,2],"4259":[32,0],"4261":[78,0],"4272":[22,1],"4276":[55,0],"4284":[6,2],"4285":[36,0],"4290":[72,0],"4298":[39,0],"4328":[45,0],"4338":[100,0],"4340":[71,1],"4343":[47,0],"4344":[26,0],"4350":[34,0],"4363":[49,1],"4369":[104,0],"4371":[88,2],"4373":[5,5],"4374":[39,0],"4375":[79,3],"4376":[0,2],"4395":[25,0],"4397":[11,0],"4399":[35,2],"4400":[9,3],"4408":[3,2],"4410":[87,0],"4416":[9,0],"4429":[111,0],"4430":[0,1],"4452":[97,2],"4454":[120,1],"4472":[22,0],"4480":[50,0],"4485":[14,1],"4492":[39,0],"4493":[77,0],"4494":[3,0],"4496":[7,0],"4497":[62,0],"4498":[11,0],"4499":[38,0],"4503":[39,0],"4508":[91,0],"4528":[80,0],"4531":[98,0],"4532":[30,0],"4533":[50,0],"4534":[72,0],"4540":[80,0],"4551":[79,0],"4567":[80,0],"4568":[1,1],"4570":[70,0],"4572":[1,0],"4591":[92,0],"4593":[18,0],"4595":[3,0],"4596":[6,0],"4599":[80,0],"4620":[1,0],"4622":[5,0],"4634":[46,0],"4638":[36,0],"4640":[31,0],"4649":[98,0],"4650":[132,0],"4676":[15,2],"4678":[3,1],"4682":[8,0],"4684":[16,1],"4685":[0,1],"4687":[7,3],"4689":[3,2],"4694":[140,1],"4700":[52,0],"4702":[57,0],"4703":[95,0],"4705":[68,2],"4707":[47,1],"4711":[59,2],"4713":[140,0],"4724":[32,0],"4730":[121,2],"4732":[85,2],"4733":[66,1],"4736":[71,0],"4737":[44,0],"4829":[80,0],"4830":[60,2],"4832":[46,0],"4833":[53,2],"4836":[68,0],"4841":[80,0],"4844":[48,0],"4846":[41,0],"4847":[78,0],"4849":[96,0],"4850":[97,0],"4852":[59,0]};
 // Cumulative early voters by primary history per day: d = Democratic-leaning, r = Republican-leaning, n = no primary history (incl. redacted IDs).
 const CATEGORY_BY_DAY = [{"day":1,"label":"Oct 19","t":[30460,20175,11709],"i":[25139,15868,9402],"m":[5321,4307,2307]},{"day":2,"label":"Oct 20","t":[53031,38139,22336],"i":[47674,33784,19967],"m":[5357,4355,2369]},{"day":3,"label":"Oct 21","t":[72943,57143,34038],"i":[66905,52100,31349],"m":[6038,5043,2689]}];
+// Precinct-lean tilt by day for early voters with no primary history (npt) and with a primary history (prt), vs. each group's registered base. Rebuilt daily.
+const NP_TREND = [{"day":1,"label":"Oct 19","npl":4.5,"npt":5.5,"prl":4.2,"prt":-1.7},{"day":2,"label":"Oct 20","npl":3.8,"npt":4.9,"prl":4.7,"prt":-1.1},{"day":3,"label":"Oct 21","npl":3.3,"npt":4.4,"prl":5.3,"prt":-0.5}];
 function histSum(src, filter){
   const a = [0,0,0,0,0,0,0];
   PRECINCTS.forEach(pr=>{ if(!filter(pr)) return; const v = src[pr.p]; if(!v) return; for(let i=0;i<7;i++) a[i] += v[i]; });
@@ -634,6 +645,47 @@ function renderCategoryDays(){
   el.innerHTML = svg + `<div class="legend">${names.map((n,k)=>`<span><i class="dot" style="background:${cols[k]}"></i>${n}</span>`).join('')}</div><div class="mapnote"><b>So far, among ${who}: ${sh(last.d)} Democratic-leaning, ${sh(last.r)} Republican-leaning, ${sh(last.n)} no primary history.</b> Each bar is that day's ${dataMethod === 'mail' ? 'net change in returned ballots' : 'early voters'} (the day's change in the running total; Day 1 includes mail ballots returned before early voting opened). Democratic-leaning means mostly voted in Democratic primaries since 2016, and Republican-leaning likewise. "No primary history" also holds the few early voters with redacted IDs. This shows past primary choices, not how anyone votes in November.</div>`;
 }
 
+const npListN = p => (HIST_BASE[p]||[0])[0], npRegNP = p => Math.max(0, (REGISTERED[p]||0) - npListN(p));
+const npEarlyNP = p => (NP_BY_PRECINCT[p]||[0,0])[0], npEarlyPR = p => (HIST_EARLY[p]||[0])[0];
+function leanOf(w){
+  let tot = 0, s = 0;
+  PRECINCTS.forEach(pr=>{ const l = PARTISAN[pr.p]; if(l === undefined || !REGISTERED[pr.p]) return; const x = w(pr.p); tot += x; s += x*l; });
+  return tot ? {m:(2*s/tot-1)*100, n:tot} : null;
+}
+const fmtM = m => (m >= 0 ? 'R+' : 'D+') + Math.abs(m).toFixed(1);
+function npShareColor(sh){ const t = Math.max(0, Math.min(1, sh/0.4)); return `rgb(${Math.round(247-t*62)},${Math.round(240-t*112)},${Math.round(230-t*200)})`; }
+
+function renderNoPrimary(){
+  const note = document.getElementById('npLeanNote'), tb = document.getElementById('npLeanTable'), tt = document.getElementById('npTierTable'), tr = document.getElementById('npTrend');
+  if(!Object.keys(NP_BY_PRECINCT).length){ note.style.display = 'none'; tb.innerHTML = EMPTY_MSG; tt.innerHTML = ''; tr.innerHTML = ''; return; }
+  const G = [["No primary history", leanOf(npRegNP), leanOf(npEarlyNP)], ["Primary history", leanOf(npListN), leanOf(npEarlyPR)], ["All voters", leanOf(p=>REGISTERED[p]||0), leanOf(p=>TURNOUT_BY_PRECINCT[p]||0)]];
+  const t0 = G[0][2].m - G[0][1].m, t1 = G[1][2].m - G[1][1].m, share = G[0][2].n / G[2][2].n * 100;
+  const cmp = t => Math.abs(t) < 1 ? 'about the same as' : `${Math.abs(t).toFixed(1)} points more ${t > 0 ? 'Republican' : 'Democratic'}-leaning than`;
+  note.style.display = '';
+  note.innerHTML = `<b>Early voters with no primary history (${share.toFixed(1)}% of early voters) live in precincts averaging ${fmtM(G[0][2].m)}, ${cmp(t0)} registered voters without a primary history (${fmtM(G[0][1].m)}).</b> Early voters with a primary history live in precincts ${cmp(t1)} their registered base (${fmtM(G[1][2].m)} vs. ${fmtM(G[1][1].m)}).<small>This shows where these voters live, based on past precinct results, not how they vote. "No primary history" includes first-time voters, new registrants, voters who only vote in general elections and people who moved in. Registered voters without a primary history are estimated as registered voters minus voters on the history list.</small>`;
+  const row = ([name, b, e]) => `<tr><td>${name}</td><td>${fmtM(b.m)}</td><td>${fmtM(e.m)}</td><td>${divTxt(e.m - b.m)}</td><td>${Math.round(e.n).toLocaleString()}</td></tr>`;
+  tb.innerHTML = `<table><tr><th>Group</th><th>Registered base lean</th><th>Early voters' lean</th><th>Tilt</th><th>Early voters</th></tr>${G.map(row).join('')}</table>`;
+
+  const tiers = [["Strong Democratic (under 40% R)", l=>l<.40], ["Lean Democratic (40\u201348% R)", l=>l>=.40&&l<.48], ["Competitive (48\u201352% R)", l=>l>=.48&&l<=.52], ["Lean Republican (52\u201360% R)", l=>l>.52&&l<=.60], ["Strong Republican (over 60% R)", l=>l>.60]];
+  const ok = PRECINCTS.filter(pr=>PARTISAN[pr.p] !== undefined && REGISTERED[pr.p]);
+  const sumBy = (f, w) => ok.filter(pr=>f(PARTISAN[pr.p])).reduce((a,pr)=>a + w(pr.p), 0), tot = w => ok.reduce((a,pr)=>a + w(pr.p), 0);
+  const tE = tot(npEarlyNP), tR = tot(npRegNP);
+  tt.innerHTML = `<table><tr><th>Precinct lean</th><th>Share of early voters with no primary history</th><th>Share of registered voters with no primary history</th><th>Early voters as % of registered (no primary history)</th><th>Early voters as % of registered (primary history)</th></tr>${tiers.map(([n,f])=>{ const e = sumBy(f, npEarlyNP), r = sumBy(f, npRegNP), pe = sumBy(f, npEarlyPR), pl = sumBy(f, npListN);
+    return `<tr><td>${n}</td><td>${(e/tE*100).toFixed(1)}%</td><td>${(r/tR*100).toFixed(1)}%</td><td>${r ? (e/r*100).toFixed(2) : '\u2014'}%</td><td>${pl ? (pe/pl*100).toFixed(2) : '\u2014'}%</td></tr>`; }).join('')}</table>`;
+
+  if(!NP_TREND.length){ tr.innerHTML = ''; return; }
+  const W = 880, H = 260, L = 46, Rr = 14, T = 14, B = 34, nD = 12, vals = NP_TREND.flatMap(d=>[d.npt, d.prt]), step = 2;
+  const lo = Math.floor(Math.min(0, ...vals)/step)*step - step, hi = Math.ceil(Math.max(0, ...vals)/step)*step + step;
+  const X = d => L + (d-1)*(W-L-Rr)/(nD-1), Y = v => H-B - (v-lo)/(hi-lo)*(H-T-B);
+  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Precinct-lean tilt by day, early voters with and without a primary history">`;
+  for(let t = lo; t <= hi; t += step) svg += `<line x1="${L}" y1="${Y(t)}" x2="${W-Rr}" y2="${Y(t)}" style="stroke:${t===0 ? 'var(--ink)' : 'var(--line)'}" stroke-width="${t===0 ? 1.2 : 1}"/><text x="${L-6}" y="${Y(t)+4}" text-anchor="end" font-size="11" style="fill:var(--muted)">${t>0 ? '+' : ''}${t}</text>`;
+  for(let d = 1; d <= nD; d++) svg += `<text x="${X(d)}" y="${H-B+16}" text-anchor="middle" font-size="11" style="fill:var(--muted)">${d}</text>`;
+  const line = (key, color, label) => (NP_TREND.length > 1 ? `<path d="${NP_TREND.map((d,i)=>(i ? 'L' : 'M') + X(d.day) + ',' + Y(d[key])).join(' ')}" fill="none" style="stroke:${color}" stroke-width="2"/>` : '') + NP_TREND.map(d=>`<circle cx="${X(d.day)}" cy="${Y(d[key])}" r="4" style="fill:${color}"><title>${label}, ${d.label}: ${divTxt(d[key])}</title></circle>`).join('');
+  svg += line('npt', 'var(--accent)', 'No primary history') + line('prt', 'var(--accent2)', 'Primary history');
+  svg += `<text x="${(L+W-Rr)/2}" y="${H-4}" text-anchor="middle" font-size="12" style="fill:var(--ink)">Day of early voting</text><text transform="translate(12 ${(H-B+T)/2}) rotate(-90)" text-anchor="middle" font-size="12" style="fill:var(--ink)">Points toward R (+) or D (\u2212)</text></svg>`;
+  tr.innerHTML = `<div style="font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.82rem; font-weight:600; margin:18px 0 6px">Precinct-lean tilt by day</div>` + svg + `<div class="legend"><span><i class="dot" style="background:var(--accent)"></i>No primary history</span><span><i class="dot" style="background:var(--accent2)"></i>Primary history</span></div><div class="mapnote">How much more Republican-leaning (above zero) or Democratic-leaning (below zero) the precincts of each group's early voters are than that group's registered base, using all early votes to date.</div>`;
+}
+
 function regByField(field){
   const m = {};
   PRECINCTS.forEach(pr => { const k = pr[field]; m[k] = (m[k]||0) + (REGISTERED[pr.p]||0); });
@@ -753,6 +805,7 @@ function renderMap(){
     ["registered","Registered Voters"],
     ["partisan","Partisan Lean"],
     ["diverge","Early Voters vs. Precinct Base"],
+    ["nohist","No Primary History"],
     ["commish","Commissioner Precinct"],
     ["sen","Senate District"],
     ["hse","House District"],
@@ -783,6 +836,10 @@ function renderMap(){
     } else if(mapMode==="commish"){
       fill = COM_COLORS[pr.com] || "#C9C4B6";
       info = `Commissioner Pct ${pr.com}`;
+    } else if(mapMode==="nohist"){
+      const v = TURNOUT_BY_PRECINCT[pr.p] || 0, nh = (NP_BY_PRECINCT[pr.p] || [0,0])[0];
+      if(v >= MIN_HIST_PRECINCT){ const sh = nh/v; fill = npShareColor(sh); info = `${nh.toLocaleString()} of ${v.toLocaleString()} early voters (${(sh*100).toFixed(0)}%) have no primary history`; }
+      else info = v ? `Too few early voters yet (${v})` : "No early voters yet";
     } else if(mapMode==="diverge"){
       const E = HIST_EARLY[pr.p], B = HIST_BASE[pr.p];
       if(E && B && E[0] >= MIN_HIST_PRECINCT){
@@ -848,6 +905,9 @@ function renderMap(){
   if(mapMode==="commish"){
     legend.innerHTML = Object.entries(COM_COLORS).map(([k,c])=>`<span style="display:flex;align-items:center;gap:4px;margin-right:10px"><i class="sw" style="background:${c}"></i>Pct ${k}</span>`).join('');
     note.textContent = "707 voting precincts, colored by county commissioner precinct.";
+  } else if(mapMode==="nohist"){
+    legend.innerHTML = `<span style="margin-right:6px">Lower share</span><i class="sw" style="background:${npShareColor(0)}"></i><i class="sw" style="background:${npShareColor(.13)}"></i><i class="sw" style="background:${npShareColor(.27)}"></i><i class="sw" style="background:${npShareColor(.4)}"></i><span style="margin-left:6px">Higher share of early voters with no primary history</span>`;
+    note.textContent = `Share of each precinct's early voters who have no primary history (first-time voters, new registrants, general-election-only voters and movers). Gray means fewer than ${MIN_HIST_PRECINCT} early voters so far.`;
   } else if(mapMode==="diverge"){
     legend.innerHTML = `<span style="margin-right:6px">More Democratic than base</span><i class="sw" style="background:#1F5C6F"></i><i class="sw" style="background:#8E8F8B"></i><i class="sw" style="background:#C9C4B6"></i><i class="sw" style="background:#A9705B"></i><i class="sw" style="background:#8A1538"></i><span style="margin-left:6px">More Republican than base</span>`;
     note.textContent = `Early voters' past primary choices compared with all primary voters in the same precinct. Gray means about the same, or fewer than ${MIN_HIST_PRECINCT} early voters with a history so far.`;
