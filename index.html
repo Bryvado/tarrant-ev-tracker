@@ -634,7 +634,9 @@ function renderCategoryDays(){
     const x = L + (r.day-1)*band + (band-bw)/2, vals = [r.d, r.r, r.n]; let acc = 0;
     vals.forEach((v,k)=>{
       svg += `<rect x="${x}" y="${Y(acc+v)}" width="${bw}" height="${Math.max(0, Y(acc)-Y(acc+v))}" fill="${cols[k]}"><title>${r.label}, ${names[k]}: ${v.toLocaleString()} (${(v/(r.d+r.r+r.n)*100).toFixed(0)}% of the day)</title></rect>`;
-      if(Y(acc)-Y(acc+v) > 15) svg += `<text x="${x+bw/2}" y="${(Y(acc)+Y(acc+v))/2+4}" text-anchor="middle" font-size="10" font-weight="700" fill="${k===2 ? '#3A332F' : '#fff'}">${(v/1000).toFixed(1)}k</text>`;
+      const segH = Y(acc)-Y(acc+v), mid = (Y(acc)+Y(acc+v))/2, fc = k===2 ? '#3A332F' : '#fff', pctDay = Math.round(v/(r.d+r.r+r.n)*100);
+      if(segH > 32) svg += `<text x="${x+bw/2}" y="${mid-2}" text-anchor="middle" font-size="10" font-weight="700" fill="${fc}">${(v/1000).toFixed(1)}k</text><text x="${x+bw/2}" y="${mid+11}" text-anchor="middle" font-size="10" font-weight="700" fill="${fc}">${pctDay}%</text>`;
+      else if(segH > 15) svg += `<text x="${x+bw/2}" y="${mid+4}" text-anchor="middle" font-size="10" font-weight="700" fill="${fc}">${(v/1000).toFixed(1)}k</text>`;
       acc += v;
     });
     svg += `<text x="${x+bw/2}" y="${Y(acc)-6}" text-anchor="middle" font-size="11" font-weight="700" style="fill:var(--ink)">${acc.toLocaleString()}</text>`;
@@ -643,7 +645,7 @@ function renderCategoryDays(){
   svg += `<text x="${(L+W-Rr)/2}" y="${H-6}" text-anchor="middle" font-size="12" style="fill:var(--ink)">Day of early voting</text></svg>`;
   const lq = CATEGORY_BY_DAY[CATEGORY_BY_DAY.length-1][mk], last = {d:lq[0], r:lq[1], n:lq[2]}, tot = last.d + last.r + last.n, sh = v => tot ? (v/tot*100).toFixed(0) + '%' : '\u2014';
   const who = {total:'all early voters', inperson:'in-person early voters', mail:'mail ballots returned'}[dataMethod];
-  el.innerHTML = svg + `<div class="legend">${names.map((n,k)=>`<span><i class="dot" style="background:${cols[k]}"></i>${n}</span>`).join('')}</div><div class="mapnote"><b>So far, among ${who}: ${sh(last.d)} Democratic-leaning, ${sh(last.r)} Republican-leaning, ${sh(last.n)} no primary history.</b> Each bar is that day's ${dataMethod === 'mail' ? 'net change in returned ballots' : 'early voters'} (the day's change in the running total; Day 1 includes mail ballots returned before early voting opened). Democratic-leaning means mostly voted in Democratic primaries since 2016, and Republican-leaning likewise. "No primary history" also holds the few early voters with redacted IDs. This shows past primary choices, not how anyone votes in November.</div>`;
+  el.innerHTML = svg + `<div class="legend">${names.map((n,k)=>`<span><i class="dot" style="background:${cols[k]}"></i>${n}</span>`).join('')}</div><div class="mapnote"><b>So far, among ${who}: ${sh(last.d)} Democratic-leaning, ${sh(last.r)} Republican-leaning, ${sh(last.n)} no primary history.</b> Each bar is that day's ${dataMethod === 'mail' ? 'net change in returned ballots' : 'early voters'}, with the day's total on top and each group's count and share of the day inside its segment (the day's change in the running total; Day 1 includes mail ballots returned before early voting opened). Democratic-leaning means mostly voted in Democratic primaries since 2016, and Republican-leaning likewise. "No primary history" also holds the few early voters with redacted IDs. This shows past primary choices, not how anyone votes in November.</div>`;
 }
 
 const npListN = p => (HIST_BASE[p]||[0])[0], npRegNP = p => Math.max(0, (REGISTERED[p]||0) - npListN(p));

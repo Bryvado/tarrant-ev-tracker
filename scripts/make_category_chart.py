@@ -34,8 +34,8 @@ for i, (dd, day) in enumerate(zip(daily, days)):
     x = day['day']; bottom = 0
     for k in range(3):
         ax.bar(x, dd[k], bottom=bottom, width=0.68, color=COL[k], label=labels[k] if i == 0 else None)
-        if dd[k] > max(map(sum, daily)) * 0.075:
-            ax.text(x, bottom + dd[k] / 2, f"{dd[k] / 1000:.1f}k", ha='center', va='center', fontsize=7, fontweight='bold', color=INK if k == 2 else 'white')
+        if dd[k] > max(map(sum, daily)) * 0.10:   # count (k) on top, share of that day's voters underneath
+            ax.text(x, bottom + dd[k] / 2, f"{dd[k] / 1000:.1f}k\n{dd[k] / sum(dd) * 100:.0f}%", ha='center', va='center', fontsize=7, fontweight='bold', linespacing=1.15, color=INK if k == 2 else 'white')
         bottom += dd[k]
     ax.text(x, bottom + max(map(sum, daily)) * 0.02, f"{bottom:,}", ha='center', va='bottom', fontsize=8, fontweight='bold', color=INK)
 ymax = max(map(sum, daily)) * 1.15
