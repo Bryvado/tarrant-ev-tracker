@@ -662,7 +662,7 @@ function npShareColor(sh){ const t = Math.max(0, Math.min(1, sh/0.4)); return `r
 function renderNoPrimary(){
   const note = document.getElementById('npLeanNote'), tb = document.getElementById('npLeanTable'), tt = document.getElementById('npTierTable'), tr = document.getElementById('npTrend');
   if(!Object.keys(NP_BY_PRECINCT).length){ note.style.display = 'none'; tb.innerHTML = EMPTY_MSG; tt.innerHTML = ''; tr.innerHTML = ''; return; }
-  const G = [["No primary history", leanOf(npRegNP), leanOf(npEarlyNP)], ["Primary history", leanOf(npListN), leanOf(npEarlyPR)], ["All voters", leanOf(p=>REGISTERED[p]||0), leanOf(p=>TURNOUT_BY_PRECINCT[p]||0)]];
+  const G = [["No primary history", leanOf(npRegNP), leanOf(npEarlyNP)], ["On the primary-history list (any party)", leanOf(npListN), leanOf(npEarlyPR)], ["All voters", leanOf(p=>REGISTERED[p]||0), leanOf(p=>TURNOUT_BY_PRECINCT[p]||0)]];
   const t0 = G[0][2].m - G[0][1].m, t1 = G[1][2].m - G[1][1].m, share = G[0][2].n / G[2][2].n * 100;
   const cmp = t => Math.abs(t) < 1 ? 'about the same as' : `${Math.abs(t).toFixed(1)} points more ${t > 0 ? 'Republican' : 'Democratic'}-leaning than`;
   note.style.display = '';
@@ -685,9 +685,9 @@ function renderNoPrimary(){
   for(let t = lo; t <= hi; t += step) svg += `<line x1="${L}" y1="${Y(t)}" x2="${W-Rr}" y2="${Y(t)}" style="stroke:${t===0 ? 'var(--ink)' : 'var(--line)'}" stroke-width="${t===0 ? 1.2 : 1}"/><text x="${L-6}" y="${Y(t)+4}" text-anchor="end" font-size="11" style="fill:var(--muted)">${t>0 ? '+' : ''}${t}</text>`;
   for(let d = 1; d <= nD; d++) svg += `<text x="${X(d)}" y="${H-B+16}" text-anchor="middle" font-size="11" style="fill:var(--muted)">${d}</text>`;
   const line = (key, color, label) => (NP_TREND.length > 1 ? `<path d="${NP_TREND.map((d,i)=>(i ? 'L' : 'M') + X(d.day) + ',' + Y(d[key])).join(' ')}" fill="none" style="stroke:${color}" stroke-width="2"/>` : '') + NP_TREND.map(d=>`<circle cx="${X(d.day)}" cy="${Y(d[key])}" r="4" style="fill:${color}"><title>${label}, ${d.label}: ${divTxt(d[key])}</title></circle>`).join('');
-  svg += line('npt', 'var(--accent)', 'No primary history') + line('prt', 'var(--accent2)', 'Primary history');
+  svg += line('npt', 'var(--accent)', 'No primary history') + line('prt', 'var(--accent2)', 'On the primary-history list (any party)');
   svg += `<text x="${(L+W-Rr)/2}" y="${H-4}" text-anchor="middle" font-size="12" style="fill:var(--ink)">Day of early voting</text><text transform="translate(12 ${(H-B+T)/2}) rotate(-90)" text-anchor="middle" font-size="12" style="fill:var(--ink)">Points toward R (+) or D (\u2212)</text></svg>`;
-  tr.innerHTML = `<div style="font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.82rem; font-weight:600; margin:18px 0 6px">Precinct-lean tilt by day</div>` + svg + `<div class="legend"><span><i class="dot" style="background:var(--accent)"></i>No primary history</span><span><i class="dot" style="background:var(--accent2)"></i>Primary history</span></div><div class="mapnote">How much more Republican-leaning (above zero) or Democratic-leaning (below zero) the precincts of each group's early voters are than that group's registered base, using all early votes to date.</div>`;
+  tr.innerHTML = `<div style="font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.82rem; font-weight:600; margin:18px 0 6px">Precinct-lean tilt by day</div>` + svg + `<div class="legend"><span><i class="dot" style="background:var(--accent)"></i>No primary history</span><span><i class="dot" style="background:var(--accent2)"></i>On the primary-history list (any party)</span></div><div class="mapnote">How much more Republican-leaning (above zero) or Democratic-leaning (below zero) the precincts of each group's early voters are than that group's registered base, using all early votes to date. Both lines show where these voters live, based on past precinct results. They do not use anyone's own primary votes. "On the primary-history list" means the voter has voted in a Democratic or Republican primary since 2016.</div>`;
 }
 
 function regByField(field){
