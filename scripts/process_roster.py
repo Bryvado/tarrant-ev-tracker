@@ -25,7 +25,7 @@ must never be committed; --history-base-out writes the all-voters aggregate (sam
 usage: process_roster.py --label "Day 3" --day 3 --date 2026-10-21 --inperson FILE --mail FILE \
          [--prev data/daily/day-02.json] --out data/daily/day-03.json
 """
-import argparse, csv, json
+import argparse, csv, json, os
 from collections import Counter
 from datetime import datetime
 
@@ -81,12 +81,15 @@ def total_agg(d):
     t = d.tier.value_counts()
     return [int(len(d)), round(float(d.share.sum()), 3)] + [int(t.get(i, 0)) for i in range(5)]
 def cross_groups(d, pe):
-    # Switchers: voted in the latest primary (PE2026) in one party, but had more votes in the OTHER party in all earlier primaries.
+    # 2026-primary voters of each party, split by their earlier primaries (2016-2024): switchers (more votes in the OTHER party), mostly the same party,
+    # first primary on the list in 2026 (no earlier primary), and tied (equal, >0). Order: R switch, R same, R first, R tie, D switch, D same, D first, D tie.
     prior = [c for c in pe if c != 'PE2026']
     pR, pD = (d[prior] == 'R').sum(axis=1), (d[prior] == 'D').sum(axis=1)
-    g1 = (d.PE2026 == 'R') & (pD > pR); g3 = (d.PE2026 == 'D') & (pR > pD)
-    g2 = (d.PE2026 == 'R') & ~g1; g4 = (d.PE2026 == 'D') & ~g3
-    return [int(g.sum()) for g in (g1, g2, g3, g4)]   # R-from-D, other R, D-from-R, other D
+    out = []
+    for party, mine, theirs in (('R', pR, pD), ('D', pD, pR)):
+        v = d.PE2026 == party
+        out += [int((v & (theirs > mine)).sum()), int((v & (mine > theirs)).sum()), int((v & (mine + theirs == 0)).sum()), int((v & (mine == theirs) & (mine > 0)).sum())]
+    return out
 def history_agg(d, with_sq=False):
     res = {}
     for p, g in d.groupby('p'):
@@ -144,6 +147,7 @@ if a.history:
     hist_out['history_nonprimary'] = {'inperson': s_in, 'mail': s_ml, 'by_precinct': dict(sorted(by_all.items()))}
     if a.history_base_out:
         json.dump(history_agg(hdf, with_sq=True), open(a.history_base_out, 'w'), separators=(',', ':'))
+        json.dump({'base': cross_groups(hdf, pe)}, open(os.path.join(os.path.dirname(a.history_base_out) or '.', 'history_base_cross.json'), 'w'))
 
 out = {
     'label': a.label, 'day': a.day, 'snapshot_date': a.date,

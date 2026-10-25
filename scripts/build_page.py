@@ -51,7 +51,8 @@ if '--refresh-base' in sys.argv:   # after a new/changed primary-history list: p
     hb = {k: v for k, v in json.load(open('data/history_base.json')).items() if int(k) in meta}
     put('HIST_BASE', dump(hb)); base_tot = [sum(v[0] for v in hb.values()), round(sum(v[1] for v in hb.values()), 3)] + [sum(v[2 + i] for v in hb.values()) for i in range(5)]
 put('HIST_METHOD', dump({'base': base_tot, 'inperson': lm.get('inperson'), 'mail': lm.get('mail')}))
-hc = get('HIST_CROSS'); put('HIST_CROSS', dump({'base': hc['base'], 'early': latest.get('history_cross', {}).get('early', [0, 0, 0, 0])}))
+hc = get('HIST_CROSS'); cross_base = json.load(open('data/history_base_cross.json'))['base'] if '--refresh-base' in sys.argv else hc['base']
+put('HIST_CROSS', dump({'base': cross_base, 'early': latest.get('history_cross', {}).get('early', [0] * 8)}))
 npm = latest.get('history_nonprimary')
 if npm: put('NP_METHOD', dump({'inperson': npm['inperson'], 'mail': npm['mail']})); put('NP_BY_PRECINCT', dump(npm['by_precinct']))
 def _cat(d):   # per day, cumulative early voters by primary history as [Democratic-leaning, Republican-leaning, no primary history (incl. redacted IDs)]
