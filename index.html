@@ -1,3 +1,121 @@
+initPrecinctExplorer();
+  syncPrecinctHighlight();
+    bindPrecinctInteraction(el);
+  tip.style.opacity = 0;
+  window.addEventListener("pointercancel", ()=>{ drag = null; });
+let selectedPrecinct = null, hoveredPrecinct = null, scatterColorMode = 'partisan';
+let mapDragMoved = false;
+function scatterAvailable(p){
+  const b = HIST_BASE[p], e = HIST_EARLY[p];
+  return Number.isFinite(PARTISAN[p]) && b && b[0] > 0 && e && e[0] >= MIN_HIST_PRECINCT;
+}
+function selectPrecinct(p){
+  selectedPrecinct = selectedPrecinct === String(p) ? null : String(p);
+  hoveredPrecinct = null;
+  syncPrecinctHighlight();
+  // A previous zoom should not leave the newly selected precinct off screen.
+  const el = document.querySelector(`#mapSvg .mappath[data-p="${selectedPrecinct}"]`);
+  if(el && typeof el.getBBox === 'function'){
+    const b = el.getBBox();
+    if(b.x < view.x || b.y < view.y || b.x+b.width > view.x+view.w || b.y+b.height > view.y+view.h){
+      view = {...FULL}; applyView(); renderMap();
+    }
+  }
+}
+function clearPrecinct(){ selectedPrecinct = null; hoveredPrecinct = null; syncPrecinctHighlight(); }
+function previewPrecinct(p){
+  const next = p===null ? null : String(p);
+  if(hoveredPrecinct===next) return;
+  hoveredPrecinct = next; syncPrecinctHighlight();
+}
+function bindPrecinctInteraction(el){
+  el.addEventListener('pointerenter', ()=>previewPrecinct(el.dataset.p));
+  el.addEventListener('pointerleave', ()=>previewPrecinct(null));
+  el.addEventListener('focus', ()=>previewPrecinct(el.dataset.p));
+  el.addEventListener('blur', ()=>previewPrecinct(null));
+  el.addEventListener('click', ()=>{ if(el.classList.contains('mappath') && mapDragMoved) return; selectPrecinct(el.dataset.p); });
+  el.addEventListener('keydown', e=>{
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); selectPrecinct(el.dataset.p); }
+    if(e.key==='Escape'){ e.preventDefault(); clearPrecinct(); }
+  });
+}
+function syncPrecinctHighlight(){
+  const active = hoveredPrecinct || selectedPrecinct;
+  for(const [id,selector] of [['mapSvg','.mappath'],['scatterSvg','.scatter-point']]){
+    const svg = document.getElementById(id); if(!svg) continue;
+    svg.querySelectorAll('.link-highlight').forEach(el=>el.remove());
+    svg.querySelectorAll(selector).forEach(el=>{
+      el.classList.toggle('is-muted', !!active && el.dataset.p!==active);
+      el.setAttribute('aria-pressed', String(el.dataset.p===selectedPrecinct));
+    });
+    const target = active && svg.querySelector(`${selector}[data-p="${active}"]`);
+    if(target){
+      for(const cls of ['link-halo','link-outline']){
+        const outline = target.cloneNode(false);
+        ['style','tabindex','role','aria-label','aria-pressed','data-p','fill-opacity','opacity'].forEach(a=>outline.removeAttribute(a));
+        outline.setAttribute('class',`link-highlight ${cls}`);
+        outline.setAttribute('aria-hidden','true');
+        outline.setAttribute('fill','none');
+        svg.appendChild(outline);
+      }
+    }
+  }
+  const details = document.getElementById('precinctDetails');
+  document.getElementById('clearPrecinct').disabled = !selectedPrecinct;
+  document.getElementById('zoomPrecinct').disabled = !selectedPrecinct;
+  if(!active){ details.textContent='Hover to compare; click or tap a precinct or dot to keep it selected. Escape clears the selection.'; return; }
+  const l = PARTISAN[active], reg = REGISTERED[active], votes = TURNOUT_BY_PRECINCT[active];
+  const b = HIST_BASE[active], e = HIST_EARLY[active];
+  const stats = [Number.isFinite(l) ? `Past election lean: ${leanTxt(l)} (${(l*100).toFixed(1)}% R)` : 'No partisan history',
+    reg && Number.isFinite(votes) ? `Turnout: ${(votes/reg*100).toFixed(1)}% (${votes.toLocaleString()} / ${reg.toLocaleString()})` : 'No usable turnout rate'];
+  if(e && e[0]) stats.push(`Early voters’ primary history: ${(e[1]/e[0]*100).toFixed(1)}% R · ${e[0].toLocaleString()} voters`);
+  if(e && e[0] && b && b[0]) stats.push(`Gap from base: ${divTxt((e[1]/e[0]-b[1]/b[0])*100)} pp`);
+  const missing = !scatterAvailable(active) ? `Not plotted: requires partisan lean, a primary-history base, and at least ${MIN_HIST_PRECINCT} early voters with primary history.` : '';
+  details.innerHTML = `<b>Precinct ${active}</b><span class="detail-note">${hoveredPrecinct && hoveredPrecinct!==selectedPrecinct ? 'Preview · click to select' : 'Selected · click again to clear'}</span><div class="detail-metrics">${stats.map(t=>`<span>${t}</span>`).join('')}</div>${missing ? `<div class="detail-note">${missing}</div>` : ''}`;
+}
+function initPrecinctExplorer(){
+  document.getElementById('precinctOptions').innerHTML = PRECINCTS.map(p=>`<option value="${p.p}"></option>`).join('');
+  document.getElementById('precinctSearch').onsubmit = e=>{
+    e.preventDefault(); const input = document.getElementById('precinctInput'), p = input.value.trim();
+    if(!PRECINCTS.some(pr=>String(pr.p)===p)){
+      document.getElementById('precinctDetails').textContent = 'Enter a precinct number from the list.'; return;
+    }
+    if(selectedPrecinct===p){ hoveredPrecinct=null; syncPrecinctHighlight(); } else selectPrecinct(p);
+  };
+  document.getElementById('clearPrecinct').onclick = clearPrecinct;
+  document.getElementById('zoomPrecinct').onclick = ()=>{
+    const path = document.querySelector(`#mapSvg .mappath[data-p="${selectedPrecinct}"]`);
+    if(!path || typeof path.getBBox!=='function') return;
+    const b = path.getBBox(), w = Math.min(FULL.w,Math.max(FULL.w/12,b.width*1.8,b.height*1.8*FULL.w/FULL.h));
+    view = {x:b.x+b.width/2-w/2,y:b.y+b.height/2-w*FULL.h/FULL.w/2,w,h:w*FULL.h/FULL.w};
+    clampView(); renderMap();
+    document.getElementById('precinctMapPanel').scrollIntoView({block:'nearest'});
+  };
+  document.addEventListener('keydown', e=>{ if(e.key==='Escape') clearPrecinct(); });
+}
+.precinct-explorer{width:min(1200px,calc(100vw - 40px)); position:relative; left:50%; transform:translateX(-50%);}
+.explorer-grid{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; align-items:start;}
+.explorer-panel{min-width:0; scroll-margin-top:16px;}
+.explorer-panel h3{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.9rem; margin:0 0 12px;}
+.explorer-tools,.explorer-tools form{display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.8rem;}
+.explorer-tools{margin-bottom:10px;}
+#precinctInput{width:100px; min-height:30px; padding:5px 7px; border:1px solid var(--line); background:var(--card); color:var(--ink); font:inherit;}
+.mapbtn:disabled{opacity:.45; cursor:default;}
+.mapbtn:focus-visible,#precinctInput:focus-visible,.paired-link:focus-visible{outline:2px solid var(--accent); outline-offset:3px;}
+.precinct-details{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.82rem; line-height:1.5; padding:12px; margin-bottom:18px; height:108px; overflow:auto; background:var(--card); border:1px solid var(--line); border-left:3px solid var(--accent);}
+.precinct-details b{margin-right:12px;}
+.precinct-details .detail-metrics{display:flex; flex-wrap:wrap; gap:4px 18px; margin-top:4px;}
+.precinct-details .detail-note{color:var(--muted);}
+.scatter-point{cursor:pointer; stroke:var(--paper); stroke-width:.6; vector-effect:non-scaling-stroke;}
+.scatter-point.is-muted{opacity:.2;}
+.mappath.is-muted{opacity:.35;}
+.scatter-point:focus-visible,.mappath:focus-visible{outline:none; stroke:var(--ink); stroke-width:2;}
+.link-halo,.link-outline{fill:none; pointer-events:none; vector-effect:non-scaling-stroke; stroke-linejoin:round;}
+.link-halo{stroke:#151515; stroke-width:5;}
+.link-outline{stroke:#FFF; stroke-width:2.5;}
+.paired-link{display:none; font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.8rem; color:var(--ink); margin-top:12px;}
+@media(max-width:900px){.precinct-details{height:180px;}.explorer-grid{grid-template-columns:1fr; gap:28px;}.paired-link{display:inline-block;}}
+@media(max-width:560px){#scatterSvg text{font-size:16px;}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -70,7 +188,7 @@ footer{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.75rem; c
 .mailfill{height:100%; background:var(--accent);}
 .mixrow{display:grid; grid-template-columns:200px 1fr; gap:10px; align-items:center; margin-bottom:10px; font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.82rem;}
 @media (max-width:560px){.mixrow{grid-template-columns:1fr;}}
-.mappath.dim{pointer-events:none; cursor:default;}
+.mappath.dim{cursor:pointer;}
 #mapSvg{user-select:none; -webkit-user-select:none;}
 .pollmark{cursor:pointer;}
 .zoomctl{position:absolute; top:8px; right:8px; display:flex; flex-direction:column; gap:4px; z-index:6;}
@@ -163,9 +281,35 @@ footer{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.75rem; c
     <div class="tablewrap" id="divergeTable"></div>
   </section>
 
-  <section>
-    <h2>Early voters vs. what each precinct's lean predicts</h2>
-    <div id="scatterChart"></div>
+  <section class="precinct-explorer" aria-labelledby="explorerTitle">
+    <h2 id="explorerTitle">Precinct map &amp; voter history</h2>
+    <div class="explorer-tools">
+      <form id="precinctSearch"><label for="precinctInput">Find precinct</label> <input id="precinctInput" list="precinctOptions" inputmode="numeric" placeholder="e.g. 1005" autocomplete="off"><datalist id="precinctOptions"></datalist><button class="mapbtn" type="submit">Select</button></form>
+      <button class="mapbtn" id="clearPrecinct" type="button" disabled>Clear selection</button>
+      <button class="mapbtn" id="zoomPrecinct" type="button" disabled>Zoom to precinct</button>
+    </div>
+    <div id="precinctDetails" class="precinct-details" aria-live="polite" aria-atomic="true">Hover to compare; click or tap a precinct or dot to keep it selected.</div>
+    <div class="explorer-grid">
+      <div class="explorer-panel" id="precinctScatterPanel">
+        <h3>Early voters vs. what each precinct's lean predicts</h3>
+        <div id="scatterTools" class="maptools" aria-label="Graph colors"></div>
+        <div id="scatterChart"></div>
+        <div id="scatterLegend" class="scaleLegend"></div>
+        <a class="paired-link" href="#precinctMapPanel">Go to map ↓</a>
+      </div>
+    <div class="explorer-panel" id="precinctMapPanel">
+      <h3>Precinct map</h3>
+    <div class="maptools" id="mapTools"></div>
+    <div class="mapwrap">
+      <svg id="mapSvg" viewBox="0 0 6344.2 6419.7"></svg>
+      <div class="tooltip" id="mapTip"></div>
+      <div class="zoomctl"><button id="zIn" aria-label="Zoom in">+</button><button id="zOut" aria-label="Zoom out">−</button><button id="zReset" class="wide">Reset</button></div>
+    </div>
+    <div class="scaleLegend" id="mapLegend"></div>
+    <div class="mapnote" id="mapNote"></div>
+      <a class="paired-link" href="#precinctScatterPanel">Go to graph ↑</a>
+    </div>
+    </div>
   </section>
 
   <section>
@@ -178,17 +322,7 @@ footer{font-family:-apple-system,Helvetica,Arial,sans-serif; font-size:.75rem; c
     <div class="tablewrap" id="dailyTable"></div>
   </section>
 
-  <section>
-    <h2>Precinct map</h2>
-    <div class="maptools" id="mapTools"></div>
-    <div class="mapwrap">
-      <svg id="mapSvg" viewBox="0 0 6344.2 6419.7"></svg>
-      <div class="tooltip" id="mapTip"></div>
-      <div class="zoomctl"><button id="zIn" aria-label="Zoom in">+</button><button id="zOut" aria-label="Zoom out">−</button><button id="zReset" class="wide">Reset</button></div>
-    </div>
-    <div class="scaleLegend" id="mapLegend"></div>
-    <div class="mapnote" id="mapNote"></div>
-  </section>
+
 
   <section>
     <h2>Geographic breakdown (latest day with data)</h2>
@@ -391,7 +525,6 @@ function histDiv(filter){
   return {n:E[0], e, b, d:(e!==null && b!==null) ? (e-b)*100 : null, E, B};
 }
 function divTxt(d){ if(d===null) return "\u2014"; if(Math.abs(d) < 0.05) return "Even"; return "+" + Math.abs(d).toFixed(1) + " " + (d>0 ? "R" : "D"); }
-function divColor(d){ return leanColor(0.5 + Math.max(-20, Math.min(20, d))/40); }
 
 const MIN_LEAN_VOTES = 100; // below this, early-vote lean and tilt are too noisy to show
 function leanStats(filter){
@@ -513,7 +646,7 @@ function renderCross(){
 function renderScatter(){
   const el = document.getElementById('scatterChart'), pts = [], fit = [];
   PRECINCTS.forEach(pr=>{
-    const l = PARTISAN[pr.p], b = HIST_BASE[pr.p]; if(l===undefined || !b) return;
+    const l = PARTISAN[pr.p], b = HIST_BASE[pr.p]; if(!Number.isFinite(l) || !b || !b[0]) return;
     fit.push([l*100, b[1]/b[0]*100]);
     const e = HIST_EARLY[pr.p];
     if(e && e[0] >= MIN_HIST_PRECINCT) pts.push({p:pr.p, x:l*100, y:e[1]/e[0]*100, n:e[0], d:(e[1]/e[0]-b[1]/b[0])*100});
@@ -521,17 +654,35 @@ function renderScatter(){
   if(!pts.length){ el.innerHTML = EMPTY_MSG; return; }
   const n = fit.length, mx = fit.reduce((a,v)=>a+v[0],0)/n, my = fit.reduce((a,v)=>a+v[1],0)/n;
   let sxy = 0, sxx = 0; fit.forEach(v=>{ sxy += (v[0]-mx)*(v[1]-my); sxx += (v[0]-mx)*(v[0]-mx); });
-  const slope = sxy/sxx, icpt = my - slope*mx;
-  const W = 620, H = 380, L = 48, R = 14, T = 12, B = 44, X = v => L + v/100*(W-L-R), Y = v => H-B - v/100*(H-T-B);
+  const slope = sxx ? sxy/sxx : 0, icpt = my - slope*mx;
+  const W = 620, H = 500, L = 72, R = 14, T = 12, B = 44, X = v => L + v/100*(W-L-R), Y = v => H-B - v/100*(H-T-B);
   let xa = 0, xb = 100, ya = icpt, yb = icpt + slope*100;
   if(ya < 0){ xa = -icpt/slope; ya = 0; } if(ya > 100){ xa = (100-icpt)/slope; ya = 100; }
   if(yb < 0){ xb = -icpt/slope; yb = 0; } if(yb > 100){ xb = (100-icpt)/slope; yb = 100; }
-  let svg = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Early voters' primary history against precinct general-election lean">`;
-  [0,25,50,75,100].forEach(t=>{ svg += `<line x1="${X(t)}" y1="${T}" x2="${X(t)}" y2="${H-B}" style="stroke:var(--line)" stroke-width="1"/><line x1="${L}" y1="${Y(t)}" x2="${W-R}" y2="${Y(t)}" style="stroke:var(--line)" stroke-width="1"/><text x="${X(t)}" y="${H-B+16}" text-anchor="middle" font-size="11" style="fill:var(--muted)">${t}%</text><text x="${L-6}" y="${Y(t)+4}" text-anchor="end" font-size="11" style="fill:var(--muted)">${t}%</text>`; });
+  let svg = `<svg id="scatterSvg" viewBox="0 0 ${W} ${H}" role="group" aria-label="Interactive precinct graph. Select a dot to highlight its precinct on the map.">`;
+  [0,25,50,75,100].forEach(t=>{ svg += `<line x1="${X(t)}" y1="${T}" x2="${X(t)}" y2="${H-B}" style="stroke:var(--line)" stroke-width="1"/><line x1="${L}" y1="${Y(t)}" x2="${W-R}" y2="${Y(t)}" style="stroke:var(--line)" stroke-width="1"/><text x="${X(t)}" y="${H-B+16}" text-anchor="${t===0 ? 'start' : t===100 ? 'end' : 'middle'}" font-size="11" style="fill:var(--muted)">${t}%</text><text x="${L-6}" y="${Y(t)+4}" text-anchor="end" font-size="11" style="fill:var(--muted)">${t}%</text>`; });
   svg += `<line x1="${X(xa)}" y1="${Y(ya)}" x2="${X(xb)}" y2="${Y(yb)}" style="stroke:var(--ink)" stroke-width="1.5" stroke-dasharray="5 4"/>`;
-  svg += pts.map(p=>`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="${(3 + Math.sqrt(p.n)/2.2).toFixed(1)}" fill="${divColor(p.d)}" fill-opacity=".8" stroke="#3A332F" stroke-opacity=".35" stroke-width=".6"><title>Precinct ${p.p}: ${p.n} early voters on the list; ${p.y.toFixed(0)}% R primary history (precinct base ${(p.y-p.d).toFixed(0)}%, ${divTxt(p.d)}); general-election lean ${p.x.toFixed(0)}% R</title></circle>`).join('');
+  // Draw smaller dots last so large precincts cannot cover all their neighbors.
+  svg += pts.sort((a,b)=>b.n-a.n).map(p=>`<circle class="scatter-point" data-p="${p.p}" tabindex="0" role="button" aria-pressed="false" aria-label="Precinct ${p.p}, ${p.x.toFixed(1)}% Republican general-election lean, ${p.y.toFixed(1)}% Republican primary history, ${p.n} early voters" cx="${X(p.x)}" cy="${Y(p.y)}" r="${(2.5 + Math.sqrt(p.n)/8).toFixed(1)}" fill="${mapColor(scatterColorMode,scatterColorMode==='partisan' ? p.x/100 : p.d)}"><title>Precinct ${p.p}: ${p.n} early voters on the list; ${p.y.toFixed(1)}% R primary history (precinct base ${(p.y-p.d).toFixed(1)}%, ${divTxt(p.d)} pp); general-election lean ${p.x.toFixed(1)}% R</title></circle>`).join('');
   svg += `<text x="${(L+W-R)/2}" y="${H-6}" text-anchor="middle" font-size="12" style="fill:var(--ink)">Precinct general-election lean (% Republican)</text><text transform="translate(12 ${(H-B+T)/2}) rotate(-90)" text-anchor="middle" font-size="12" style="fill:var(--ink)">Early voters' R share of past primary votes</text></svg>`;
-  el.innerHTML = svg + `<div class="mapnote">Each dot is a precinct with at least ${MIN_HIST_PRECINCT} early voters on the history list; bigger dots have more early voters. The dashed line is what a typical precinct's own primary voters look like at each lean. Dot color shows the gap versus that precinct's own base (maroon: early voters more Republican; teal: more Democratic). Hover a dot for details.</div>`;
+  el.innerHTML = svg + `<div class="mapnote">Each dot is a precinct with at least ${MIN_HIST_PRECINCT} early voters on the history list; dot size shows that count. The dashed line summarizes the relationship between general-election lean and the primary-history base across precincts. ${scatterColorMode==='partisan' ? 'Color shows past general-election lean: blue Democratic, red Republican.' : 'Color shows the gap from the precinct’s primary-history base: blue more Democratic, red more Republican.'} Hover to compare with the map; click, tap, or press Enter to select.</div>`;
+  document.getElementById('scatterTools').innerHTML = [['partisan','Partisan lean'],['diverge','Gap vs. precinct base']].map(([mode,label])=>`<button class="mapbtn${scatterColorMode===mode ? ' active' : ''}" data-scatter-mode="${mode}" aria-pressed="${scatterColorMode===mode}">${label}</button>`).join('');
+  document.querySelectorAll('[data-scatter-mode]').forEach(b=>b.onclick = ()=>{
+    hoveredPrecinct=null; scatterColorMode=b.dataset.scatterMode; mapMode=scatterColorMode; renderScatter(); renderMap();
+  });
+  document.getElementById('scatterLegend').innerHTML = mapScaleLegend(scatterColorMode);
+  el.querySelectorAll('.scatter-point').forEach(bindPrecinctInteraction);
+  // Nearby blank space is a usable touch target for small dots.
+  document.getElementById('scatterSvg').addEventListener('click', e=>{
+    if(e.target.closest('.scatter-point')) return;
+    let nearest = null, distance = 12;
+    el.querySelectorAll('.scatter-point').forEach(dot=>{
+      const r = dot.getBoundingClientRect(), d = Math.hypot(e.clientX-r.x-r.width/2,e.clientY-r.y-r.height/2);
+      if(d < distance){ nearest=dot.dataset.p; distance=d; }
+    });
+    if(nearest) selectPrecinct(nearest);
+  });
+  syncPrecinctHighlight();
 }
 
 function renderTrend(){
@@ -705,12 +856,6 @@ function regByField(field){
   PRECINCTS.forEach(pr => { const k = pr[field]; m[k] = (m[k]||0) + (REGISTERED[pr.p]||0); });
   return m;
 }
-function leanColor(rStrength){
-  // rStrength: Republican two-party vote share, 0-1. Gradient from Dem teal through gray to Rep maroon.
-  const t = Math.max(-1, Math.min(1, (rStrength-0.5)*2));
-  if(t>=0) return `rgb(${Math.round(201-t*63)},${Math.round(196-t*175)},${Math.round(182-t*126)})`;
-  const a=-t; return `rgb(${Math.round(201-a*170)},${Math.round(196-a*104)},${Math.round(182-a*71)})`;
-}
 // Fixed, explicit intervals keep the same value the same color across daily updates.
 // Breaks concentrate turnout detail in the 10–40% range without rescaling to outliers.
 const MAP_SCALES = {
@@ -720,10 +865,10 @@ const MAP_SCALES = {
     colors:['#EDF5FA','#C6DEED','#93C5DF','#5B9FC8','#327BA9','#19557F','#10364F'], unit:'count', missing:'No registration data'},
   nohist: {title:'No primary history · % of early voters', breaks:[.10,.20,.30,.40,.50,.60],
     colors:['#F4EFF8','#DDD2EB','#BEABD8','#9B82BF','#795BA3','#583B80','#392451'], unit:'percent', missing:'Too few voters / no history data'},
-  partisan: {title:'Republican two-party vote share · past elections', breaks:[.20,.35,.45,.55,.65,.80],
-    colors:['#155568','#398C9E','#92C5C9','#F0EDE4','#DDA4AD','#B64D67','#801C3C'], unit:'percent', missing:'No partisan history'},
+  partisan: {title:'Partisan lean · Republican two-party vote share', breaks:[.30,.40,.45,.49,.51,.55,.60,.70],
+    colors:['#2166AC','#4393C3','#74ADD1','#B9D9EA','#F3EFE6','#F5C2AE','#E98971','#D55148','#AD2436'], unit:'percent', missing:'No partisan history'},
   diverge: {title:'Republican primary-history share · change from precinct base (pp)', breaks:[-15,-5,-2,2,5,15],
-    colors:['#155568','#398C9E','#92C5C9','#F0EDE4','#DDA4AD','#B64D67','#801C3C'], unit:'points', missing:'Too few voters / no base data'}
+    colors:['#2166AC','#4393C3','#92C5DE','#F3EFE6','#F4A582','#D6604D','#AD2436'], unit:'points', missing:'Too few voters / no base data'}
 };
 const MAP_MISSING = 'url(#map-missing)';
 function mapColor(mode, value){
@@ -772,8 +917,8 @@ function initMapControls(){
   document.getElementById("zOut").onclick = ()=>zoomBy(1/1.7);
   document.getElementById("zReset").onclick = ()=>{ view = {...FULL}; renderMap(); };
   const svg = document.getElementById("mapSvg"); let drag = null;
-  svg.addEventListener("pointerdown", e=>{ if(view.w >= FULL.w-1) return; drag = {x:e.clientX, y:e.clientY, vx:view.x, vy:view.y}; });
-  window.addEventListener("pointermove", e=>{ if(!drag) return; const u = view.w/svg.clientWidth; view.x = drag.vx-(e.clientX-drag.x)*u; view.y = drag.vy-(e.clientY-drag.y)*u; clampView(); applyView(); });
+  svg.addEventListener("pointerdown", e=>{ mapDragMoved=false; if(view.w >= FULL.w-1) return; drag = {x:e.clientX, y:e.clientY, vx:view.x, vy:view.y}; });
+  window.addEventListener("pointermove", e=>{ if(!drag) return; if(Math.hypot(e.clientX-drag.x,e.clientY-drag.y)>4) mapDragMoved=true; const u = view.w/svg.clientWidth; view.x = drag.vx-(e.clientX-drag.x)*u; view.y = drag.vy-(e.clientY-drag.y)*u; clampView(); applyView(); });
   window.addEventListener("pointerup", ()=>{ drag = null; });
 }
 
@@ -848,7 +993,7 @@ function renderMap(){
     ["polls","Polling Locations"],
   ];
   tools.innerHTML = modes.map(m=>`<button class="mapbtn${m[0]===mapMode?' active':''}" data-mode="${m[0]}">${m[1]}</button>`).join('');
-  tools.querySelectorAll('button').forEach(b=> b.onclick = ()=>{ mapMode=b.dataset.mode; renderMap(); });
+  tools.querySelectorAll('button').forEach(b=> b.onclick = ()=>{ hoveredPrecinct=null; mapMode=b.dataset.mode; if(mapMode==='partisan' || mapMode==='diverge'){ scatterColorMode=mapMode; renderScatter(); } renderMap(); });
 
   const svg = document.getElementById('mapSvg');
   applyView();
@@ -904,7 +1049,7 @@ function renderMap(){
         info = `${side}+${margin.toFixed(1)} (R ${(p*100).toFixed(1)}% / D ${((1-p)*100).toFixed(1)}%)`;
       } else info = "No partisan history for this precinct (new for 2026)";
     }
-    return `<path class="mappath${mapMode==="polls" ? " dim" : ""}" d="${pr.d}" fill="${fill}" data-p="${pr.p}" data-info="${info.replace(/"/g,'&quot;')}" data-turn="${turnStr}" data-hist="${histStr(pr.p)}" data-sen="${pr.sen}" data-hse="${pr.hse}" data-cong="${pr.cong}" data-com="${pr.com}"></path>`;
+    return `<path role="button" tabindex="0" aria-pressed="false" aria-label="Precinct ${pr.p}. Select to highlight in the graph." class="mappath${mapMode==="polls" ? " dim" : ""}" d="${pr.d}" fill="${fill}" data-p="${pr.p}" data-info="${info.replace(/"/g,'&quot;')}" data-turn="${turnStr}" data-hist="${histStr(pr.p)}" data-sen="${pr.sen}" data-hse="${pr.hse}" data-cong="${pr.cong}" data-com="${pr.com}"></path>`;
   }).join('');
   let markers = "";
   if(mapMode==="polls"){
@@ -947,7 +1092,7 @@ function renderMap(){
     note.textContent = `Share of each precinct's early voters who have no primary history (first-time voters, new registrants, general-election-only voters and movers). Hatching marks missing data or fewer than ${MIN_HIST_PRECINCT} early voters so far.`;
   } else if(mapMode==="diverge"){
     legend.innerHTML = mapScaleLegend("diverge");
-    note.textContent = `Early voters' past primary choices compared with all primary voters in the same precinct. Teal means more Democratic, maroon more Republican, and cream from −2 to under +2 percentage points of the base. Hatching marks missing data or fewer than ${MIN_HIST_PRECINCT} early voters with a history.`;
+    note.textContent = `Early voters' past primary choices compared with all primary voters in the same precinct. Blue means more Democratic, red more Republican, and cream from −2 to under +2 percentage points of the base. Hatching marks missing data or fewer than ${MIN_HIST_PRECINCT} early voters with a history.`;
   } else if(dm){
     legend.innerHTML = Object.entries(dcol).map(([k,c])=>`<span style="display:flex;align-items:center;gap:4px;margin-right:10px"><i class="sw" style="background:${c}"></i>${dm.short} ${k}</span>`).join('');
     legend.style.flexWrap = "wrap";
@@ -964,7 +1109,7 @@ function renderMap(){
     note.textContent = haveTurnoutData ? "Cumulative mail and in-person early votes as a share of registered voters. Darker shades mean higher turnout; fixed cutoffs keep colors comparable across daily updates. Hatching marks missing turnout data or no usable registration count." : "Early voting opens Monday, Oct 19. This view fills in once the first day's numbers are posted.";
   } else {
     legend.innerHTML = havePartisanData ? mapScaleLegend("partisan") : "";
-    note.textContent = havePartisanData ? "Republican two-party vote share by precinct, from past top-of-ballot election results." : "Waiting on the partisan-lean file to populate this view.";
+    note.textContent = havePartisanData ? "Past top-of-ballot Republican two-party vote share. Blue is Democratic-leaning, red is Republican-leaning, and cream is 49% to under 51% Republican. Darker shades show stronger lean; hatching marks missing history." : "Waiting on the partisan-lean file to populate this view.";
   }
 }
 main();
